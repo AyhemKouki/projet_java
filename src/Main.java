@@ -1,16 +1,11 @@
-import controller.BookController;
-import controller.UserController;
 import database.DatabaseInitializer;
-import database.DBConnection;
+import view.LoginUI;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class Main {
     public static void main(String[] args) throws SQLException {
-        //DatabaseInitializer.init();
+        DatabaseInitializer.init();
 
         //BookController.addBook();
         //BookController.ListBooks();
@@ -21,6 +16,8 @@ public class Main {
         //UserController.listUsers();
         //UserController.updateUser();
         //UserController.deleteUser();
+
+        LoginUI.main(args);
 
     }
 }

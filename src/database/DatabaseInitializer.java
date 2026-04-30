@@ -26,11 +26,22 @@ public class DatabaseInitializer {
             );
         """;
 
+        String createBorrowTable = """
+                CREATE TABLE IF NOT EXISTS borrowed_books (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    book_id INTEGER,
+                    borrow_date TEXT,
+                    return_date TEXT
+                );
+        """;
+
         try (Connection conn = DBConnection.connect();
              Statement stmt = conn.createStatement()) {
 
             stmt.execute(createBooksTable);
             stmt.execute(createUsersTable);
+            stmt.execute(createBorrowTable);
 
         } catch (Exception e) {
             e.printStackTrace();
