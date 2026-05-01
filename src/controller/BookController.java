@@ -101,4 +101,33 @@ public class BookController {
             return false;
         }
     }
+
+    // ================= GET AVAILABLE BOOKS =================
+    public static List<Book> getAvailableBooks() {
+
+        List<Book> books = new ArrayList<>();
+        String sql = "SELECT * FROM books WHERE available = 1";
+
+        try (
+                Connection conn = DBConnection.connect();
+                PreparedStatement st = conn.prepareStatement(sql);
+                ResultSet rs = st.executeQuery()
+        ) {
+
+            while (rs.next()) {
+                books.add(new Book(
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getString("author"),
+                        rs.getString("category"),
+                        rs.getBoolean("available")
+                ));
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return books;
+    }
 }

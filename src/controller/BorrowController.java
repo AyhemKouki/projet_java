@@ -1,9 +1,12 @@
 package controller;
 
 import database.DBConnection;
+import model.Book;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BorrowController {
 
@@ -66,5 +69,65 @@ public class BorrowController {
             System.out.println(e.getMessage());
             return false;
         }
+    }
+
+    public static int getBorrowId(int userId, int bookId) {
+
+        String sql = "SELECT id FROM borrowed_books WHERE user_id = ? AND book_id = ? AND return_date IS NULL";
+
+        try (
+                Connection conn = DBConnection.connect();
+                PreparedStatement st = conn.prepareStatement(sql)
+        ) {
+            st.setInt(1, userId);
+            st.setInt(2, bookId);
+
+            ResultSet rs = st.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return -1;
+    }
+
+    // ================= GET USER BORROWED BOOKS =================
+    public static List<Book> getUserBorrowedBooks(int userId) {
+
+        List<Book> books = new ArrayList<>();
+
+        String sql = """
+        SELECT b.* FROM books b
+        JOIN borrowed_books bb ON b.id = bb.book_id
+        WHERE bb.user_id = ? AND bb.return_date IS NULL
+    """;
+
+        try (
+                Connection conn = DBConnection.connect();
+                PreparedStatement st = conn.prepareStatement(sql)
+        ) {
+
+            st.setInt(1, userId);
+            ResultSet rs = st.executeQuery();
+
+            while (rs.next()) {
+                books.add(new Book(
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getString("author"),
+                        rs.getString("category"),
+                        rs.getBoolean("available")
+                ));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return books;
     }
 }
