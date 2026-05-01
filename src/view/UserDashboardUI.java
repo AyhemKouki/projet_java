@@ -38,6 +38,7 @@ public class UserDashboardUI {
         Button borrowBtn = new Button("Borrow");
         Button returnBtn = new Button("Return");
         Button refreshBtn = new Button("Refresh");
+        Button profileBtn = new Button("Update Profile");
         Button logoutBtn = new Button("Logout");
 
         // ================= BORROW =================
@@ -89,6 +90,11 @@ public class UserDashboardUI {
             loadBorrowedBooks();
         });
 
+        // ================= UPDATE PROFILE =================
+        profileBtn.setOnAction(e -> {
+            new UpdateProfileUI().show(stage);
+        });
+
         // ================= LOGOUT =================
         logoutBtn.setOnAction(e -> {
             new LoginUI().start(stage);
@@ -100,7 +106,7 @@ public class UserDashboardUI {
 
         HBox tables = new HBox(20, left, right);
 
-        HBox topBar = new HBox(10, refreshBtn, logoutBtn);
+        HBox topBar = new HBox(10, refreshBtn, profileBtn , logoutBtn);
 
         VBox root = new VBox(15, topBar, tables);
         root.setPadding(new Insets(15));

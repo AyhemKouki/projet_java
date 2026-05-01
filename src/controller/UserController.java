@@ -63,9 +63,9 @@ public class UserController {
     }
 
     // ================= UPDATE USER =================
-    public static boolean updateUser(int id, String name) {
+    public static boolean updateUser(int id, String name,  String email, String password) {
 
-        String sql = "UPDATE users SET name = ? WHERE id = ?";
+        String sql = "UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?";
 
         try (
                 Connection conn = DBConnection.connect();
@@ -73,7 +73,9 @@ public class UserController {
         ) {
 
             st.setString(1, name);
-            st.setInt(2, id);
+            st.setString(2, email);
+            st.setString(3, password);
+            st.setInt(4, id);
 
             return st.executeUpdate() > 0;
 
@@ -130,5 +132,36 @@ public class UserController {
         }
 
         return false;
+    }
+
+    public static User getUserById(int id) {
+
+        String sql = "SELECT * FROM users WHERE id = ?";
+
+        try (
+                Connection conn = DBConnection.connect();
+                PreparedStatement st = conn.prepareStatement(sql)
+        ) {
+
+            st.setInt(1, id);
+
+            ResultSet rs = st.executeQuery();
+
+            if (rs.next()) {
+
+                return new User(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("email"),
+                        rs.getString("password"),
+                        rs.getString("role")
+                );
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return null;
     }
 }
