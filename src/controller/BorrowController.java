@@ -120,7 +120,8 @@ public class BorrowController {
                         rs.getString("title"),
                         rs.getString("author"),
                         rs.getString("category"),
-                        rs.getBoolean("available")
+                        rs.getBoolean("available"),
+                        rs.getString("image_path")
                 ));
             }
 

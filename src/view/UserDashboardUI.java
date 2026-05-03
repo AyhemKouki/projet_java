@@ -4,10 +4,11 @@ import controller.BookController;
 import controller.BorrowController;
 import model.Book;
 import util.Session;
-import javafx.collections.*;
 import javafx.geometry.*;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
@@ -15,11 +16,7 @@ import java.util.List;
 
 public class UserDashboardUI {
 
-    private TableView<Book> table = new TableView<>();
-    private TableView<Book> borrowedTable = new TableView<>();
-
-    private ObservableList<Book> data = FXCollections.observableArrayList();
-    private ObservableList<Book> borrowedData = FXCollections.observableArrayList();
+    private TilePane booksGrid = new TilePane();
 
     public void show(Stage stage) {
 
@@ -28,78 +25,46 @@ public class UserDashboardUI {
         brand.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2C2C2A;");
 
         Button refreshBtn = createTopButton("Refresh");
+        Button myBooksBtn = createTopButton("My Books");
         Button profileBtn = createTopButton("Profile");
         Button logoutBtn = createTopButton("Logout");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox topBar = new HBox(15, brand, spacer, refreshBtn, profileBtn, logoutBtn);
+        HBox topBar = new HBox(15, brand, spacer, refreshBtn, myBooksBtn, profileBtn, logoutBtn);
         topBar.setAlignment(Pos.CENTER);
         topBar.setPadding(new Insets(10, 20, 10, 20));
         topBar.setStyle("-fx-background-color: white; -fx-border-color: #E5E3DA;");
 
-        // ── Tables Setup ───────────────────────
-        setupColumns(table);
-        setupColumns(borrowedTable);
+        // ── Grid Config ─────────────────────────
+        booksGrid.setPadding(new Insets(20));
+        booksGrid.setHgap(15);
+        booksGrid.setVgap(15);
+        booksGrid.setPrefColumns(4);
 
-        styleTable(table);
-        styleTable(borrowedTable);
+        loadBooksGrid();
 
-        loadAvailableBooks();
-        loadBorrowedBooks();
+        // ── Content ─────────────────────────────
+        Label title = createSectionTitle("Available Books");
 
-        // ── Left Card (Available Books) ────────
-        Label title1 = createSectionTitle("Available Books");
+        ScrollPane scroll = new ScrollPane(booksGrid);
+        scroll.setFitToWidth(true);
 
-        Button borrowBtn = createPrimaryButton("Borrow");
-
-        VBox leftCard = new VBox(12, title1, table, borrowBtn);
-        styleCard(leftCard);
-
-        // ── Right Card (Borrowed Books) ───────
-        Label title2 = createSectionTitle("My Borrowed Books");
-
-        Button returnBtn = createPrimaryButton("Return");
-
-        VBox rightCard = new VBox(12, title2, borrowedTable, returnBtn);
-        styleCard(rightCard);
-
-        HBox content = new HBox(20, leftCard, rightCard);
+        VBox content = new VBox(12, title, scroll);
         content.setPadding(new Insets(20));
+        styleCard(content);
 
-        // ── Actions ───────────────────────────
-        borrowBtn.setOnAction(e -> {
-            Book selected = table.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                if (BorrowController.borrowBook(Session.userId, selected.getId())) {
-                    loadAvailableBooks();
-                    loadBorrowedBooks();
-                }
-            }
-        });
+        // ── Actions ─────────────────────────────
+        refreshBtn.setOnAction(e -> loadBooksGrid());
 
-        returnBtn.setOnAction(e -> {
-            Book selected = borrowedTable.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                int borrowId = BorrowController.getBorrowId(Session.userId, selected.getId());
-                if (BorrowController.returnBook(borrowId, selected.getId())) {
-                    loadAvailableBooks();
-                    loadBorrowedBooks();
-                }
-            }
-        });
-
-        refreshBtn.setOnAction(e -> {
-            loadAvailableBooks();
-            loadBorrowedBooks();
-        });
+        myBooksBtn.setOnAction(e -> showBorrowedBooks(stage));
 
         profileBtn.setOnAction(e -> new UpdateProfileUI().show(stage));
 
         logoutBtn.setOnAction(e -> new LoginUI().start(stage));
 
-        // ── Root ──────────────────────────────
+        // ── Root ────────────────────────────────
         VBox root = new VBox(topBar, content);
         root.setStyle("-fx-background-color: #F1EFE8;");
 
@@ -109,11 +74,123 @@ public class UserDashboardUI {
         stage.show();
     }
 
-    // ── UI Helpers ───────────────────────────
+    // ── Load Books ────────────────────────────
+    private void loadBooksGrid() {
+        booksGrid.getChildren().clear();
 
+        List<Book> books = BookController.getAvailableBooks();
+
+        for (Book book : books) {
+            booksGrid.getChildren().add(createBookCard(book));
+        }
+    }
+
+    // ── Book Card ─────────────────────────────
+    private VBox createBookCard(Book book) {
+
+        ImageView image = new ImageView();
+
+        try {
+            image.setImage(new Image(book.getImagePath(), 120, 160, true, true));
+        } catch (Exception e) {
+            image.setImage(new Image("https://via.placeholder.com/120x160"));
+        }
+
+        Label title = new Label(book.getTitle());
+        title.setStyle("-fx-font-weight: bold;");
+
+        Label author = new Label(book.getAuthor());
+        author.setStyle("-fx-text-fill: #666;");
+
+        Button borrowBtn = createPrimaryButton("Borrow");
+
+        borrowBtn.setOnAction(e -> {
+            if (BorrowController.borrowBook(Session.userId, book.getId())) {
+                loadBooksGrid();
+            }
+        });
+
+        VBox card = new VBox(8, image, title, author, borrowBtn);
+        card.setAlignment(Pos.CENTER);
+        card.setPadding(new Insets(10));
+
+        card.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 12;" +
+                        "-fx-border-color: #E5E3DA;" +
+                        "-fx-border-radius: 12;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10,0,0,2);"
+        );
+
+        return card;
+    }
+
+    // ── Borrowed Books Page ───────────────────
+    private void showBorrowedBooks(Stage stage) {
+
+        TilePane grid = new TilePane();
+        grid.setPadding(new Insets(20));
+        grid.setHgap(15);
+        grid.setVgap(15);
+        grid.setPrefColumns(4);
+
+        List<Book> books = BorrowController.getUserBorrowedBooks(Session.userId);
+
+        for (Book book : books) {
+
+            ImageView image = new ImageView();
+
+            try {
+                image.setImage(new Image(book.getImagePath(), 120, 160, true, true));
+            } catch (Exception e) {
+                image.setImage(new Image("https://via.placeholder.com/120x160"));
+            }
+
+            Label title = new Label(book.getTitle());
+            title.setStyle("-fx-font-weight: bold;");
+
+            Label author = new Label(book.getAuthor());
+            author.setStyle("-fx-text-fill: #666;");
+
+            Button returnBtn = createPrimaryButton("Return");
+
+            returnBtn.setOnAction(e -> {
+                int borrowId = BorrowController.getBorrowId(Session.userId, book.getId());
+                if (BorrowController.returnBook(borrowId, book.getId())) {
+                    showBorrowedBooks(stage);
+                }
+            });
+
+            VBox card = new VBox(8, image, title, author, returnBtn);
+            card.setAlignment(Pos.CENTER);
+            card.setPadding(new Insets(10));
+
+            card.setStyle(
+                    "-fx-background-color: white;" +
+                            "-fx-background-radius: 12;" +
+                            "-fx-border-color: #E5E3DA;" +
+                            "-fx-border-radius: 12;" +
+                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10,0,0,2);"
+            );
+
+            grid.getChildren().add(card);
+        }
+
+        Button backBtn = createTopButton("← Back");
+
+        backBtn.setOnAction(e -> show(stage));
+
+        VBox root = new VBox(10, backBtn, new ScrollPane(grid));
+        root.setPadding(new Insets(20));
+
+        Scene scene = new Scene(root, 900, 500);
+        stage.setScene(scene);
+    }
+
+    // ── UI Helpers ───────────────────────────
     private Label createSectionTitle(String text) {
         Label label = new Label(text);
-        label.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2C2C2A;");
+        label.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
         return label;
     }
 
@@ -129,22 +206,6 @@ public class UserDashboardUI {
                         "-fx-font-weight: bold;"
         );
 
-        btn.setOnMouseEntered(e -> btn.setStyle(
-                "-fx-background-color: #444441;" +
-                        "-fx-text-fill: white;" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 10;" +
-                        "-fx-font-weight: bold;"
-        ));
-
-        btn.setOnMouseExited(e -> btn.setStyle(
-                "-fx-background-color: #2C2C2A;" +
-                        "-fx-text-fill: white;" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 10;" +
-                        "-fx-font-weight: bold;"
-        ));
-
         return btn;
     }
 
@@ -152,66 +213,17 @@ public class UserDashboardUI {
         Button btn = new Button(text);
         btn.setStyle(
                 "-fx-background-color: transparent;" +
-                        "-fx-text-fill: #555;" +
-                        "-fx-font-size: 13px;"
+                        "-fx-text-fill: #555;"
         );
         return btn;
     }
 
     private void styleCard(VBox box) {
-        box.setPadding(new Insets(15));
-        box.setPrefWidth(450);
         box.setStyle(
                 "-fx-background-color: white;" +
                         "-fx-background-radius: 12;" +
                         "-fx-border-color: #E5E3DA;" +
-                        "-fx-border-radius: 12;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10,0,0,2);"
+                        "-fx-border-radius: 12;"
         );
-    }
-
-    private void styleTable(TableView<Book> table) {
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setStyle(
-                "-fx-background-color: transparent;" +
-                        "-fx-border-color: #E5E3DA;" +
-                        "-fx-border-radius: 8;"
-        );
-    }
-
-    // ── Data ────────────────────────────────
-
-    private void setupColumns(TableView<Book> table) {
-
-        TableColumn<Book, Integer> idCol = new TableColumn<>("ID");
-        idCol.setCellValueFactory(c ->
-                new javafx.beans.property.SimpleObjectProperty<>(c.getValue().getId())
-        );
-
-        TableColumn<Book, String> titleCol = new TableColumn<>("Title");
-        titleCol.setCellValueFactory(c ->
-                new javafx.beans.property.SimpleStringProperty(c.getValue().getTitle())
-        );
-
-        TableColumn<Book, String> authorCol = new TableColumn<>("Author");
-        authorCol.setCellValueFactory(c ->
-                new javafx.beans.property.SimpleStringProperty(c.getValue().getAuthor())
-        );
-
-        table.getColumns().addAll(idCol, titleCol, authorCol);
-    }
-
-    private void loadAvailableBooks() {
-        data.clear();
-        List<Book> books = BookController.getAvailableBooks();
-        data.addAll(books);
-        table.setItems(data);
-    }
-
-    private void loadBorrowedBooks() {
-        borrowedData.clear();
-        List<Book> books = BorrowController.getUserBorrowedBooks(Session.userId);
-        borrowedData.addAll(books);
-        borrowedTable.setItems(borrowedData);
     }
 }

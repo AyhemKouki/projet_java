@@ -36,12 +36,15 @@ public class DatabaseInitializer {
                 );
         """;
 
+        String update = "ALTER TABLE books ADD COLUMN image_path TEXT";
+
         try (Connection conn = DBConnection.connect();
              Statement stmt = conn.createStatement()) {
 
             stmt.execute(createBooksTable);
             stmt.execute(createUsersTable);
             stmt.execute(createBorrowTable);
+            stmt.execute(update);
 
         } catch (Exception e) {
             e.printStackTrace();

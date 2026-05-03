@@ -27,7 +27,8 @@ public class BookController {
                         rs.getString("title"),
                         rs.getString("author"),
                         rs.getString("category"),
-                        rs.getBoolean("available")
+                        rs.getBoolean("available"),
+                        rs.getString("image_path")
                 ));
             }
 
@@ -39,9 +40,9 @@ public class BookController {
     }
 
     // ================= ADD BOOK =================
-    public static boolean addBook(String title, String author, String category, boolean available) {
+    public static boolean addBook(String title, String author, String category, boolean available, String imagePath) {
 
-        String sql = "INSERT INTO books (title, author, category, available) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO books (title, author, category, available, image_path) VALUES (?, ?, ?, ?, ?)";
 
         try (
                 Connection conn = DBConnection.connect();
@@ -52,27 +53,7 @@ public class BookController {
             st.setString(2, author);
             st.setString(3, category);
             st.setBoolean(4, available);
-
-            return st.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
-    }
-
-    // ================= UPDATE BOOK =================
-    public static boolean updateBook(int id, String title) {
-
-        String sql = "UPDATE books SET title = ? WHERE id = ?";
-
-        try (
-                Connection conn = DBConnection.connect();
-                PreparedStatement st = conn.prepareStatement(sql)
-        ) {
-
-            st.setString(1, title);
-            st.setInt(2, id);
+            st.setString(5, imagePath);
 
             return st.executeUpdate() > 0;
 
@@ -120,7 +101,8 @@ public class BookController {
                         rs.getString("title"),
                         rs.getString("author"),
                         rs.getString("category"),
-                        rs.getBoolean("available")
+                        rs.getBoolean("available"),
+                        rs.getString("image_path")
                 ));
             }
 

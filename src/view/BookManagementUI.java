@@ -7,8 +7,10 @@ import javafx.geometry.*;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.util.List;
 
 public class BookManagementUI {
@@ -20,105 +22,99 @@ public class BookManagementUI {
 
         // ── Top Bar ──────────────────────────
         Label brand = new Label("📚 Librarium Admin");
-        brand.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2C2C2A;");
+        brand.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
         Button backBtn = new Button("← Back");
-        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #555;");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         HBox topBar = new HBox(10, brand, spacer, backBtn);
-        topBar.setAlignment(Pos.CENTER);
-        topBar.setPadding(new Insets(10, 20, 10, 20));
-        topBar.setStyle("-fx-background-color: white; -fx-border-color: #E5E3DA;");
+        topBar.setPadding(new Insets(10));
 
-        // ── Table Setup ──────────────────────
+        // ── Table ────────────────────────────
         setupColumns();
-        styleTable();
-
         loadBooks();
 
-        // ── Section Title ────────────────────
-        Label title = new Label("Book Management");
-        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2C2C2A;");
-
-        // ── Input Styles ─────────────────────
-        String inputStyle =
-                "-fx-background-color: #F1EFE8;" +
-                        "-fx-border-color: #D3D1C7;" +
-                        "-fx-border-radius: 8;" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 10 14;";
-
+        // ── Inputs ───────────────────────────
         TextField titleField = new TextField();
         titleField.setPromptText("Title");
-        titleField.setStyle(inputStyle);
 
         TextField authorField = new TextField();
         authorField.setPromptText("Author");
-        authorField.setStyle(inputStyle);
 
         TextField categoryField = new TextField();
         categoryField.setPromptText("Category");
-        categoryField.setStyle(inputStyle);
 
         TextField availableField = new TextField();
         availableField.setPromptText("Available (1/0)");
-        availableField.setStyle(inputStyle);
+
+        // ── Image Picker ─────────────────────
+        Label imageLabel = new Label("No image selected");
+        Button selectImageBtn = new Button("Select Image");
+
+        final String[] imagePath = {""};
+
+        selectImageBtn.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select Book Image");
+
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg")
+            );
+
+            File file = fileChooser.showOpenDialog(stage);
+
+            if (file != null) {
+                imagePath[0] = file.toURI().toString(); // important
+                imageLabel.setText(file.getName());
+            }
+        });
 
         // ── Buttons ──────────────────────────
-        Button addBtn = createPrimaryButton("Add Book");
-        Button deleteBtn = createPrimaryButton("Delete");
-        Button refreshBtn = createTopButton("Refresh");
+        Button addBtn = new Button("Add Book");
+        Button deleteBtn = new Button("Delete");
+        Button refreshBtn = new Button("Refresh");
 
-        // ── Form Layout ──────────────────────
+        // ── Layout ───────────────────────────
         VBox form = new VBox(10,
-                new Label("Add New Book"),
+                new Label("Add Book"),
                 titleField,
                 authorField,
                 categoryField,
                 availableField,
+                selectImageBtn,
+                imageLabel,
                 addBtn
         );
 
-        styleCard(form);
+        VBox tableBox = new VBox(10, table, new HBox(10, deleteBtn, refreshBtn));
 
-        // ── Table Card ───────────────────────
-        VBox tableCard = new VBox(10, title, table);
+        HBox rootLayout = new HBox(20, tableBox, form);
+        rootLayout.setPadding(new Insets(20));
 
-        HBox actions = new HBox(10, deleteBtn, refreshBtn);
-        tableCard.getChildren().add(actions);
-
-        styleCard(tableCard);
-
-        // ── Layout ───────────────────────────
-        HBox content = new HBox(20, tableCard, form);
-        content.setPadding(new Insets(20));
-
-        VBox root = new VBox(topBar, content);
-        root.setStyle("-fx-background-color: #F1EFE8;");
+        VBox root = new VBox(topBar, rootLayout);
 
         // ── Actions ──────────────────────────
         addBtn.setOnAction(e -> {
-            try {
-                BookController.addBook(
-                        titleField.getText(),
-                        authorField.getText(),
-                        categoryField.getText(),
-                        availableField.getText().equals("1")
-                );
 
-                loadBooks();
+            BookController.addBook(
+                    titleField.getText(),
+                    authorField.getText(),
+                    categoryField.getText(),
+                    availableField.getText().equals("1"),
+                    imagePath[0]
+            );
 
-                titleField.clear();
-                authorField.clear();
-                categoryField.clear();
-                availableField.clear();
+            loadBooks();
 
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            // reset fields
+            titleField.clear();
+            authorField.clear();
+            categoryField.clear();
+            availableField.clear();
+            imagePath[0] = "";
+            imageLabel.setText("No image selected");
         });
 
         deleteBtn.setOnAction(e -> {
@@ -134,14 +130,13 @@ public class BookManagementUI {
         backBtn.setOnAction(e -> new AdminDashboardUI().show(stage));
 
         // ── Scene ────────────────────────────
-        Scene scene = new Scene(root, 1000, 550);
+        Scene scene = new Scene(root, 900, 500);
         stage.setScene(scene);
-        stage.setTitle("Librarium — Book Management");
+        stage.setTitle("Book Management");
         stage.show();
     }
 
-    // ── Helpers ─────────────────────────────
-
+    // ── Table Columns ───────────────────────
     private void setupColumns() {
 
         TableColumn<Book, Integer> idCol = new TableColumn<>("ID");
@@ -166,67 +161,14 @@ public class BookManagementUI {
 
         TableColumn<Book, Boolean> availCol = new TableColumn<>("Available");
         availCol.setCellValueFactory(c ->
-                new javafx.beans.property.SimpleObjectProperty<>(c.getValue().getAvailable())
+                new javafx.beans.property.SimpleObjectProperty(c.getValue().getAvailable())
         );
 
         table.getColumns().addAll(idCol, titleCol, authorCol, categoryCol, availCol);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
-    private void styleTable() {
-        table.setStyle(
-                "-fx-background-color: transparent;" +
-                        "-fx-border-color: #E5E3DA;" +
-                        "-fx-border-radius: 8;"
-        );
-    }
-
-    private void styleCard(VBox box) {
-        box.setPadding(new Insets(15));
-        box.setPrefWidth(450);
-        box.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-border-color: #E5E3DA;" +
-                        "-fx-border-radius: 12;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10,0,0,2);"
-        );
-    }
-
-    private Button createPrimaryButton(String text) {
-        Button btn = new Button(text);
-        btn.setMaxWidth(Double.MAX_VALUE);
-
-        btn.setStyle(
-                "-fx-background-color: #2C2C2A;" +
-                        "-fx-text-fill: white;" +
-                        "-fx-background-radius: 10;" +
-                        "-fx-padding: 10;" +
-                        "-fx-font-weight: bold;"
-        );
-
-        btn.setOnMouseEntered(e -> {
-            btn.setScaleX(1.03);
-            btn.setScaleY(1.03);
-        });
-
-        btn.setOnMouseExited(e -> {
-            btn.setScaleX(1);
-            btn.setScaleY(1);
-        });
-
-        return btn;
-    }
-
-    private Button createTopButton(String text) {
-        Button btn = new Button(text);
-        btn.setStyle(
-                "-fx-background-color: transparent;" +
-                        "-fx-text-fill: #555;"
-        );
-        return btn;
-    }
-
+    // ── Load Data ───────────────────────────
     private void loadBooks() {
         data.clear();
         List<Book> books = BookController.ListBooks();
