@@ -211,6 +211,10 @@ public class LoginUI extends Application {
             }
         });
 
+        register.setOnAction(e -> {
+            new RegisterUI().show(stage);
+        });
+
         Scene scene = new Scene(root, 700, 520);
         stage.setTitle("Librarium — Login");
         stage.setScene(scene);
