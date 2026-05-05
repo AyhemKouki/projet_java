@@ -63,6 +63,32 @@ public class BookController {
         }
     }
 
+    // ================= UPDATE BOOK =================
+    public static boolean updateBook(int id, String title, String author,
+                                     String category, boolean available, String imagePath) {
+
+        String sql = "UPDATE books SET title = ?, author = ?, category = ?, available = ?, image_path = ? WHERE id = ?";
+
+        try (
+                Connection conn = DBConnection.connect();
+                PreparedStatement st = conn.prepareStatement(sql)
+        ) {
+
+            st.setString(1, title);
+            st.setString(2, author);
+            st.setString(3, category);
+            st.setBoolean(4, available);
+            st.setString(5, imagePath);
+            st.setInt(6, id);
+
+            return st.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
     // ================= DELETE BOOK =================
     public static boolean deleteBook(int id) {
 
