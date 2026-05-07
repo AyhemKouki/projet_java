@@ -2,6 +2,7 @@ package controller;
 
 import database.DBConnection;
 import model.User;
+import org.mindrot.jbcrypt.BCrypt;
 import util.Session;
 
 import java.sql.*;
@@ -20,9 +21,12 @@ public class UserController {
                 PreparedStatement st = conn.prepareStatement(sql)
         ) {
 
+            // HASH PASSWORD
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
             st.setString(1, name);
             st.setString(2, email);
-            st.setString(3, password);
+            st.setString(3, hashedPassword);
             st.setString(4, role);
 
             return st.executeUpdate() > 0;
@@ -46,6 +50,7 @@ public class UserController {
         ) {
 
             while (rs.next()) {
+
                 users.add(new User(
                         rs.getInt("id"),
                         rs.getString("name"),
@@ -63,9 +68,16 @@ public class UserController {
     }
 
     // ================= UPDATE USER =================
-    public static boolean updateUser(int id, String name,  String email, String password) {
+    public static boolean updateUser(int id, String name, String email, String password) {
 
-        String sql = "UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?";
+        String sql;
+
+        // IF PASSWORD EMPTY -> KEEP OLD PASSWORD
+        if (password == null || password.isEmpty()) {
+            sql = "UPDATE users SET name = ?, email = ? WHERE id = ?";
+        } else {
+            sql = "UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?";
+        }
 
         try (
                 Connection conn = DBConnection.connect();
@@ -74,8 +86,20 @@ public class UserController {
 
             st.setString(1, name);
             st.setString(2, email);
-            st.setString(3, password);
-            st.setInt(4, id);
+
+            // WITHOUT PASSWORD UPDATE
+            if (password == null || password.isEmpty()) {
+
+                st.setInt(3, id);
+
+            } else {
+
+                // HASH NEW PASSWORD
+                String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
+                st.setString(3, hashedPassword);
+                st.setInt(4, id);
+            }
 
             return st.executeUpdate() > 0;
 
@@ -108,7 +132,7 @@ public class UserController {
     // ================= LOGIN =================
     public static boolean login(String email, String password) {
 
-        String sql = "SELECT role,id FROM users WHERE email = ? AND password = ?";
+        String sql = "SELECT id, role, password FROM users WHERE email = ?";
 
         try (
                 Connection conn = DBConnection.connect();
@@ -116,15 +140,22 @@ public class UserController {
         ) {
 
             st.setString(1, email);
-            st.setString(2, password);
 
             ResultSet rs = st.executeQuery();
 
             if (rs.next()) {
-                Session.role = rs.getString("role");;
-                Session.userId = rs.getInt("id");
-                System.out.println("LOGIN SUCCESS");
-                return true;
+
+                String hashedPassword = rs.getString("password");
+
+                // VERIFY PASSWORD
+                if (BCrypt.checkpw(password, hashedPassword)) {
+
+                    Session.role = rs.getString("role");
+                    Session.userId = rs.getInt("id");
+
+                    System.out.println("LOGIN SUCCESS");
+                    return true;
+                }
             }
 
         } catch (SQLException e) {
@@ -134,6 +165,7 @@ public class UserController {
         return false;
     }
 
+    // ================= GET USER BY ID =================
     public static User getUserById(int id) {
 
         String sql = "SELECT * FROM users WHERE id = ?";

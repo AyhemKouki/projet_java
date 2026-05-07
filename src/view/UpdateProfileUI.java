@@ -78,7 +78,7 @@ public class UpdateProfileUI {
         passwordLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #888780;");
 
         PasswordField passwordField = new PasswordField();
-        passwordField.setText(user.getPassword());
+        passwordField.setPromptText("Enter new password");
         passwordField.setStyle(normalStyle);
 
         TextField visiblePassword = new TextField();
