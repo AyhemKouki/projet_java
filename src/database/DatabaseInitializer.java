@@ -1,20 +1,13 @@
 package database;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.Statement;
 
 public class DatabaseInitializer {
 
     public static void init() {
-        String createBooksTable = """
-            CREATE TABLE IF NOT EXISTS books (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                author TEXT NOT NULL,
-                category TEXT,
-                available INTEGER DEFAULT 1
-            );
-        """;
+
 
         String createUsersTable = """
             CREATE TABLE IF NOT EXISTS users (
@@ -36,12 +29,19 @@ public class DatabaseInitializer {
                 );
         """;
 
+
+        String q = """
+                ALTER TABLE library_items
+                ALTER COLUMN author DROP NOT NULL;
+                """;
+
         try (Connection conn = DBConnection.connect();
              Statement stmt = conn.createStatement()) {
 
-            stmt.execute(createBooksTable);
-            stmt.execute(createUsersTable);
-            stmt.execute(createBorrowTable);
+            //stmt.execute(createUsersTable);
+            //stmt.execute(createBorrowTable);
+
+            stmt.executeUpdate(q);
 
         } catch (Exception e) {
             e.printStackTrace();
