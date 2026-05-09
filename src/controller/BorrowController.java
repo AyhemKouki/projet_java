@@ -1,5 +1,6 @@
 package controller;
 
+import Execption.MaximumBooksLimitException;
 import database.DBConnection;
 import model.*;
 
@@ -11,17 +12,31 @@ import java.util.List;
 public class BorrowController {
 
     // ================= BORROW ITEM =================
-    public static boolean borrowItem(int userId, int itemId) {
+    public static boolean borrowItem(int userId, int itemId) throws MaximumBooksLimitException {
 
+        String checkLimit = "SELECT COUNT(*) FROM borrowed_items WHERE user_id = ? AND return_date IS NULL";
         String sql = "INSERT INTO borrowed_items (user_id, item_id, borrow_date, return_date) VALUES (?, ?, ?, NULL)";
         String update = "UPDATE library_items SET available = 0 WHERE id = ?";
 
         try (
                 Connection conn = DBConnection.connect();
+                PreparedStatement st0 = conn.prepareStatement(checkLimit);
                 PreparedStatement st1 = conn.prepareStatement(sql);
                 PreparedStatement st2 = conn.prepareStatement(update)
         ) {
+            st0.setInt(1, userId);
 
+            ResultSet rs = st0.executeQuery();
+
+            if (rs.next()) {
+                int borrowedCount = rs.getInt(1);
+
+                if (borrowedCount >= 3) {
+                    throw new MaximumBooksLimitException(
+                            "User cannot borrow more than 3 books."
+                    );
+                }
+            }
             String today = LocalDate.now().toString();
 
             st1.setInt(1, userId);

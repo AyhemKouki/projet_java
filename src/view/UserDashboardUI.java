@@ -1,5 +1,6 @@
 package view;
 
+import Execption.MaximumBooksLimitException;
 import controller.BorrowController;
 import controller.LibraryItemController;
 import model.Book;
@@ -168,12 +169,38 @@ public class UserDashboardUI {
 
         borrowBtn.setOnAction(e -> {
 
-            if (BorrowController.borrowItem(
-                    Session.userId,
-                    item.getId()
-            )) {
+            try {
 
-                loadItemsGrid();
+                boolean success = BorrowController.borrowItem(
+                        Session.userId,
+                        item.getId()
+                );
+
+                if (success) {
+
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+
+                    alert.setTitle("Success");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Item borrowed successfully!");
+
+                    alert.showAndWait();
+
+                    loadItemsGrid();
+                }
+
+            } catch (MaximumBooksLimitException ex) {
+
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+
+                alert.setTitle("Borrow Limit");
+                alert.setHeaderText("Maximum Limit Reached");
+
+                alert.setContentText(
+                        ex.getMessage()
+                );
+
+                alert.showAndWait();
             }
         });
 
