@@ -14,213 +14,165 @@ import util.Session;
 
 public class LoginUI extends Application {
 
+    private static final String BG = "#0F0F10";
+    private static final String CARD = "#1E1E1F";
+    private static final String BORDER = "#2B2B2D";
+    private static final String TEXT = "#FFFFFF";
+    private static final String MUTED = "#A1A1AA";
+    private static final String BLUE = "#60A5FA";
+
     @Override
     public void start(Stage stage) {
 
-        // ── Brand ─────────────────────────────
-        Label brandIcon = new Label("📚");
-        brandIcon.setStyle("-fx-background-color: #2C2C2A; -fx-background-radius: 8; -fx-padding: 6 8;");
-
-        Label brandName = new Label("Librarium");
-        brandName.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2C2C2A;");
-
-        HBox brand = new HBox(10, brandIcon, brandName);
-        brand.setAlignment(Pos.CENTER_LEFT);
-
-        // ── Title ─────────────────────────────
         Label title = new Label("Welcome back");
-        title.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #2C2C2A;");
+        title.setStyle(textBig());
 
-        Label subtitle = new Label("Sign in to access your library account");
-        subtitle.setStyle("-fx-font-size: 13px; -fx-text-fill: #888780;");
+        Label subtitle = new Label("Sign in to Librarium");
+        subtitle.setStyle(textMuted());
 
-        // ── Email ─────────────────────────────
         Label emailLabel = new Label("EMAIL");
-        emailLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #888780;");
+        emailLabel.setStyle(labelStyle());
 
         TextField emailField = new TextField();
+        emailField.setStyle(inputStyle());
         emailField.setPromptText("you@example.com");
 
-        // ── Password ──────────────────────────
         Label passwordLabel = new Label("PASSWORD");
-        passwordLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #888780;");
+        passwordLabel.setStyle(labelStyle());
 
         PasswordField passwordField = new PasswordField();
+        passwordField.setStyle(inputStyle());
         passwordField.setPromptText("••••••••");
 
-        TextField visiblePassword = new TextField();
-        visiblePassword.setManaged(false);
-        visiblePassword.setVisible(false);
-
-        // bind text
-        visiblePassword.textProperty().bindBidirectional(passwordField.textProperty());
-
-        CheckBox showPassword = new CheckBox("Show");
-
-        // toggle password visibility
-        showPassword.setOnAction(e -> {
-            if (showPassword.isSelected()) {
-                passwordField.setVisible(false);
-                passwordField.setManaged(false);
-
-                visiblePassword.setVisible(true);
-                visiblePassword.setManaged(true);
-            } else {
-                passwordField.setVisible(true);
-                passwordField.setManaged(true);
-
-                visiblePassword.setVisible(false);
-                visiblePassword.setManaged(false);
-            }
-        });
-
-        // ── Styles for inputs ─────────────────
-        String normalStyle =
-                "-fx-background-color: #F1EFE8;" +
-                        "-fx-border-color: #D3D1C7;" +
-                        "-fx-border-radius: 8;" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 10 14;";
-
-        String focusStyle =
-                "-fx-background-color: #FFFFFF;" +
-                        "-fx-border-color: #2C2C2A;" +
-                        "-fx-border-width: 1;" +
-                        "-fx-border-radius: 8;" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 10 14;";
-
-        emailField.setStyle(normalStyle);
-        passwordField.setStyle(normalStyle);
-        visiblePassword.setStyle(normalStyle);
-
-        // focus effect
-        emailField.focusedProperty().addListener((obs, oldV, newV) ->
-                emailField.setStyle(newV ? focusStyle : normalStyle));
-
-        passwordField.focusedProperty().addListener((obs, oldV, newV) ->
-                passwordField.setStyle(newV ? focusStyle : normalStyle));
-
-        visiblePassword.focusedProperty().addListener((obs, oldV, newV) ->
-                visiblePassword.setStyle(newV ? focusStyle : normalStyle));
-
-        VBox emailGroup = new VBox(6, emailLabel, emailField);
-        HBox passwordBox = new HBox(10, passwordField, visiblePassword, showPassword);
-        VBox passwordGroup = new VBox(6, passwordLabel, passwordBox);
-
-        // ── Message ───────────────────────────
         Label message = new Label();
-        message.setStyle("-fx-text-fill: #E24B4A;");
+        message.setStyle("-fx-text-fill: #EF4444;");
         message.setVisible(false);
-        message.setManaged(false);
 
-        // ── Button ────────────────────────────
         Button loginBtn = new Button("Sign in");
         loginBtn.setMaxWidth(Double.MAX_VALUE);
-        loginBtn.setStyle(
-                "-fx-background-color: linear-gradient(to right, #2C2C2A, #3A3A38);" +
-                        "-fx-text-fill: white;" +
-                        "-fx-background-radius: 10;" +
-                        "-fx-font-weight: bold;" +
-                        "-fx-padding: 12;"
-        );
+        loginBtn.setStyle(primaryButton());
 
-        // hover animation
-        loginBtn.setOnMouseEntered(e -> {
-            loginBtn.setScaleX(1.03);
-            loginBtn.setScaleY(1.03);
-        });
+        addBtnEffects(loginBtn);
 
-        loginBtn.setOnMouseExited(e -> {
-            loginBtn.setScaleX(1);
-            loginBtn.setScaleY(1);
-        });
-
-        // ── Footer ────────────────────────────
-        Hyperlink forgot = new Hyperlink("Forgot password?");
         Hyperlink register = new Hyperlink("Create account");
+        register.setStyle(linkStyle());
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        register.setOnAction(e -> new RegisterUI().show(stage));
 
-        HBox footer = new HBox(forgot, spacer, register);
-
-        // ── Card ──────────────────────────────
-        VBox card = new VBox(16,
-                brand,
-                title, subtitle,
-                emailGroup,
-                passwordGroup,
+        VBox card = new VBox(14,
+                title,
+                subtitle,
+                emailLabel,
+                emailField,
+                passwordLabel,
+                passwordField,
                 message,
                 loginBtn,
-                new Separator(),
-                footer
+                register
         );
 
         card.setPadding(new Insets(30));
-        card.setMaxWidth(400);
-        card.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 16;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 24, 0, 0, 4);"
-        );
+        card.setMaxWidth(420);
+        card.setStyle(cardStyle());
 
-        // hover shadow
-        card.setOnMouseEntered(e -> card.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 16;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 30, 0, 0, 6);"
-        ));
-
-        card.setOnMouseExited(e -> card.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 16;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 24, 0, 0, 4);"
-        ));
-
-        // ── Root ─────────────────────────────
         StackPane root = new StackPane(card);
-        root.setStyle("-fx-background-color: #F1EFE8;");
-        root.setPadding(new Insets(40));
+        root.setStyle("-fx-background-color: " + BG + ";");
 
-        // ── Login logic ──────────────────────
+        Scene scene = new Scene(root, 800, 550);
+        stage.setScene(scene);
+        stage.setTitle("Login");
+        stage.show();
+
+        entrance(card);
+
         loginBtn.setOnAction(e -> {
-            boolean login = UserController.login(
+
+            boolean ok = UserController.login(
                     emailField.getText(),
                     passwordField.getText()
             );
 
-            if (login) {
-                if (Session.role.equals("admin")) {
+            if (ok) {
+
+                if ("admin".equals(Session.role)) {
                     new AdminDashboardUI().show(stage);
                 } else {
                     new UserDashboardUI().show(stage);
                 }
-            } else {
-                message.setText("Invalid email or password");
-                message.setVisible(true);
-                message.setManaged(true);
 
-                // shake animation
-                TranslateTransition shake = new TranslateTransition(Duration.millis(80), card);
-                shake.setFromX(0);
-                shake.setByX(10);
-                shake.setCycleCount(4);
-                shake.setAutoReverse(true);
-                shake.play();
+            } else {
+                message.setText("Invalid credentials");
+                message.setVisible(true);
+                shake(card);
             }
         });
-
-        register.setOnAction(e -> {
-            new RegisterUI().show(stage);
-        });
-
-        Scene scene = new Scene(root, 700, 520);
-        stage.setTitle("Librarium — Login");
-        stage.setScene(scene);
-        stage.show();
     }
 
+    // ================= STYLE =================
+
+    private String cardStyle() {
+        return "-fx-background-color:" + CARD + ";" +
+                "-fx-background-radius: 18;" +
+                "-fx-border-color:" + BORDER + ";" +
+                "-fx-border-radius: 18;" +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 20, 0, 0, 6);";
+    }
+
+    private String inputStyle() {
+        return "-fx-background-color:#171717;" +
+                "-fx-text-fill:white;" +
+                "-fx-background-radius:12;" +
+                "-fx-border-color:#2B2B2D;" +
+                "-fx-border-radius:12;" +
+                "-fx-padding:10 14;";
+    }
+
+    private String labelStyle() {
+        return "-fx-text-fill:#A1A1AA;-fx-font-size:11px;-fx-font-weight:bold;";
+    }
+
+    private String textBig() {
+        return "-fx-text-fill:white;-fx-font-size:28px;-fx-font-weight:bold;";
+    }
+
+    private String textMuted() {
+        return "-fx-text-fill:#A1A1AA;-fx-font-size:13px;";
+    }
+
+    private String primaryButton() {
+        return "-fx-background-color:#60A5FA;" +
+                "-fx-text-fill:white;" +
+                "-fx-background-radius:12;" +
+                "-fx-font-weight:bold;" +
+                "-fx-padding:12;";
+    }
+
+    private String linkStyle() {
+        return "-fx-text-fill:#A1A1AA;";
+    }
+
+    private void addBtnEffects(Button b) {
+        b.setOnMouseEntered(e -> { b.setScaleX(1.03); b.setScaleY(1.03); });
+        b.setOnMouseExited(e -> { b.setScaleX(1); b.setScaleY(1); });
+    }
+
+    private void entrance(VBox card) {
+        card.setOpacity(0);
+        card.setTranslateY(20);
+
+        TranslateTransition tt = new TranslateTransition(Duration.millis(400), card);
+        tt.setToY(0);
+        card.setOpacity(1);
+        tt.play();
+    }
+
+    private void shake(VBox card) {
+        TranslateTransition t = new TranslateTransition(Duration.millis(60), card);
+        t.setByX(8);
+        t.setCycleCount(6);
+        t.setAutoReverse(true);
+        t.play();
+    }
     public static void main(String[] args) {
         launch();
     }

@@ -1,9 +1,9 @@
 package view;
 
 import controller.UserController;
+import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -14,216 +14,220 @@ import util.Session;
 
 public class UpdateProfileUI {
 
+    // ================= THEME =================
+    private static final String BG = "#0F0F10";
+    private static final String CARD = "#1E1E1F";
+    private static final String BORDER = "#2B2B2D";
+    private static final String TEXT = "#FFFFFF";
+    private static final String MUTED = "#A1A1AA";
+    private static final String BLUE = "#60A5FA";
+
     public void show(Stage stage) {
 
-        // ── Brand ─────────────────────────────
-        Label brand = new Label("📚 Librarium");
-        brand.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2C2C2A;");
-
-        Button backBtnTop = new Button("← Back");
-        backBtnTop.setStyle(
-                "-fx-background-color: transparent;" +
-                        "-fx-text-fill: #555;" +
-                        "-fx-font-size: 13px;"
-        );
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        HBox topBar = new HBox(10, brand, spacer, backBtnTop);
-        topBar.setAlignment(Pos.CENTER);
-        topBar.setPadding(new Insets(10, 20, 10, 20));
-        topBar.setStyle("-fx-background-color: white; -fx-border-color: #E5E3DA;");
-
-        // ── Title ─────────────────────────────
-        Label title = new Label("Update Profile");
-        title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2C2C2A;");
-
-        Label subtitle = new Label("Edit your personal information");
-        subtitle.setStyle("-fx-font-size: 13px; -fx-text-fill: #888780;");
-
-        // ── Load user ─────────────────────────
+        // ================= USER =================
         User user = UserController.getUserById(Session.userId);
 
-        // ── Input styles ──────────────────────
-        String normalStyle =
-                "-fx-background-color: #F1EFE8;" +
-                        "-fx-border-color: #D3D1C7;" +
-                        "-fx-border-radius: 8;" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 10 14;";
+        // ================= BACK BUTTON =================
+        Button backBtn = new Button("← Back");
+        backBtn.setStyle(backStyle());
 
-        String focusStyle =
-                "-fx-background-color: #FFFFFF;" +
-                        "-fx-border-color: #2C2C2A;" +
-                        "-fx-border-width: 1;" +
-                        "-fx-border-radius: 8;" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 10 14;";
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle(backHoverStyle()));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle(backStyle()));
 
-        // ── Fields ────────────────────────────
-        Label nameLabel = new Label("NAME");
-        nameLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #888780;");
-
-        TextField nameField = new TextField(user.getName());
-        nameField.setStyle(normalStyle);
-
-        Label emailLabel = new Label("EMAIL");
-        emailLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #888780;");
-
-        TextField emailField = new TextField(user.getEmail());
-        emailField.setStyle(normalStyle);
-
-        Label passwordLabel = new Label("PASSWORD");
-        passwordLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #888780;");
-
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Enter new password");
-        passwordField.setStyle(normalStyle);
-
-        TextField visiblePassword = new TextField();
-        visiblePassword.textProperty().bindBidirectional(passwordField.textProperty());
-        visiblePassword.setManaged(false);
-        visiblePassword.setVisible(false);
-        visiblePassword.setStyle(normalStyle);
-
-        CheckBox showPassword = new CheckBox("Show");
-
-        showPassword.setOnAction(e -> {
-            if (showPassword.isSelected()) {
-                passwordField.setVisible(false);
-                passwordField.setManaged(false);
-
-                visiblePassword.setVisible(true);
-                visiblePassword.setManaged(true);
-            } else {
-                passwordField.setVisible(true);
-                passwordField.setManaged(true);
-
-                visiblePassword.setVisible(false);
-                visiblePassword.setManaged(false);
-            }
-        });
-
-        // focus effects
-        nameField.focusedProperty().addListener((obs, o, n) -> nameField.setStyle(n ? focusStyle : normalStyle));
-        emailField.focusedProperty().addListener((obs, o, n) -> emailField.setStyle(n ? focusStyle : normalStyle));
-        passwordField.focusedProperty().addListener((obs, o, n) -> passwordField.setStyle(n ? focusStyle : normalStyle));
-        visiblePassword.focusedProperty().addListener((obs, o, n) -> visiblePassword.setStyle(n ? focusStyle : normalStyle));
-
-        VBox nameGroup = new VBox(6, nameLabel, nameField);
-        VBox emailGroup = new VBox(6, emailLabel, emailField);
-        HBox passwordBox = new HBox(10, passwordField, visiblePassword, showPassword);
-        VBox passwordGroup = new VBox(6, passwordLabel, passwordBox);
-
-        // ── Message ───────────────────────────
-        Label message = new Label();
-        message.setStyle("-fx-text-fill: #E24B4A;");
-        message.setVisible(false);
-        message.setManaged(false);
-
-        // ── Button ────────────────────────────
-        Button updateBtn = new Button("Save Changes");
-        updateBtn.setMaxWidth(Double.MAX_VALUE);
-        updateBtn.setStyle(
-                "-fx-background-color: #2C2C2A;" +
-                        "-fx-text-fill: white;" +
-                        "-fx-background-radius: 10;" +
-                        "-fx-padding: 12;" +
-                        "-fx-font-weight: bold;"
+        backBtn.setOnAction(e ->
+                new UserDashboardUI().show(stage)
         );
 
-        // hover effect
-        updateBtn.setOnMouseEntered(e -> {
-            updateBtn.setScaleX(1.03);
-            updateBtn.setScaleY(1.03);
-        });
-        updateBtn.setOnMouseExited(e -> {
-            updateBtn.setScaleX(1);
-            updateBtn.setScaleY(1);
-        });
+        // ================= TITLE =================
+        Label title = new Label("Update Profile");
+        title.setStyle(titleStyle());
 
-        // ── Card ──────────────────────────────
-        VBox card = new VBox(16,
+        Label subtitle = new Label("Edit your personal information");
+        subtitle.setStyle(subStyle());
+
+        // ================= FIELDS =================
+        TextField nameField = new TextField(user.getName());
+        TextField emailField = new TextField(user.getEmail());
+        PasswordField passwordField = new PasswordField();
+
+        nameField.setStyle(inputStyle());
+        emailField.setStyle(inputStyle());
+        passwordField.setStyle(inputStyle());
+
+        nameField.setPromptText("Full name");
+        emailField.setPromptText("Email");
+        passwordField.setPromptText("New password");
+
+        Label msg = new Label();
+        msg.setVisible(false);
+        msg.setStyle("-fx-text-fill:#EF4444;");
+
+        // ================= SAVE BUTTON =================
+        Button saveBtn = new Button("Save Changes");
+        saveBtn.setMaxWidth(Double.MAX_VALUE);
+        saveBtn.setStyle(primaryButton());
+
+        addButtonEffects(saveBtn);
+
+        // ================= CARD =================
+        VBox card = new VBox(14,
+                backBtn,
                 title,
                 subtitle,
-                nameGroup,
-                emailGroup,
-                passwordGroup,
-                message,
-                updateBtn
+                nameField,
+                emailField,
+                passwordField,
+                msg,
+                saveBtn
         );
 
         card.setPadding(new Insets(30));
-        card.setMaxWidth(400);
-        card.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 16;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 24, 0, 0, 4);"
-        );
+        card.setMaxWidth(450);
+        card.setStyle(cardStyle());
 
-        // hover shadow
-        card.setOnMouseEntered(e -> card.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 16;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 30, 0, 0, 6);"
-        ));
+        // ================= ROOT =================
+        StackPane root = new StackPane(card);
+        root.setStyle("-fx-background-color: " + BG + ";");
 
-        card.setOnMouseExited(e -> card.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 16;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 24, 0, 0, 4);"
-        ));
+        Scene scene = new Scene(root, 800, 550);
+        stage.setScene(scene);
+        stage.setTitle("Update Profile");
+        stage.show();
 
-        // ── Actions ───────────────────────────
-        updateBtn.setOnAction(e -> {
+        entrance(card);
 
-            String name = nameField.getText();
-            String email = emailField.getText();
-            String password = passwordField.getText();
+        // ================= UPDATE LOGIC =================
+        saveBtn.setOnAction(e -> {
 
-            if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                message.setText("All fields are required");
-                message.setVisible(true);
-                message.setManaged(true);
+            if (nameField.getText().isEmpty()
+                    || emailField.getText().isEmpty()
+                    || passwordField.getText().isEmpty()) {
+
+                msg.setText("All fields are required");
+                msg.setVisible(true);
                 return;
             }
 
-            boolean ok = UserController.updateUser(Session.userId, name, email, password);
+            boolean ok = UserController.updateUser(
+                    Session.userId,
+                    nameField.getText(),
+                    emailField.getText(),
+                    passwordField.getText()
+            );
 
             if (ok) {
-                message.setStyle("-fx-text-fill: #2E7D32;");
-                message.setText("Profile updated successfully");
-                message.setVisible(true);
-                message.setManaged(true);
-            } else {
-                message.setStyle("-fx-text-fill: #E24B4A;");
-                message.setText("Update failed");
-                message.setVisible(true);
-                message.setManaged(true);
 
-                // shake animation
-                TranslateTransition shake = new TranslateTransition(Duration.millis(80), card);
-                shake.setFromX(0);
-                shake.setByX(10);
-                shake.setCycleCount(4);
-                shake.setAutoReverse(true);
-                shake.play();
+                msg.setStyle("-fx-text-fill:#22C55E;");
+                msg.setText("Profile updated successfully");
+                msg.setVisible(true);
+
+                ScaleTransition st =
+                        new ScaleTransition(Duration.millis(120), card);
+
+                st.setFromX(1);
+                st.setToX(1.02);
+                st.setCycleCount(2);
+                st.setAutoReverse(true);
+                st.play();
+
+            } else {
+
+                msg.setStyle("-fx-text-fill:#EF4444;");
+                msg.setText("Update failed");
+                msg.setVisible(true);
+
+                shake(card);
             }
         });
+    }
 
-        backBtnTop.setOnAction(e -> new UserDashboardUI().show(stage));
+    // ================= STYLE =================
 
-        // ── Root ──────────────────────────────
-        StackPane root = new StackPane(card);
-        root.setPadding(new Insets(40));
-        root.setStyle("-fx-background-color: #F1EFE8;");
+    private String cardStyle() {
+        return "-fx-background-color:" + CARD + ";" +
+                "-fx-background-radius:18;" +
+                "-fx-border-color:" + BORDER + ";" +
+                "-fx-border-radius:18;" +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 20, 0, 0, 6);";
+    }
 
-        VBox main = new VBox(topBar, root);
+    private String inputStyle() {
+        return "-fx-background-color:#171717;" +
+                "-fx-text-fill:white;" +
+                "-fx-background-radius:12;" +
+                "-fx-border-color:#2B2B2D;" +
+                "-fx-border-radius:12;" +
+                "-fx-padding:10 14;";
+    }
 
-        Scene scene = new Scene(main, 600, 500);
-        stage.setTitle("Librarium — Update Profile");
-        stage.setScene(scene);
-        stage.show();
+    private String primaryButton() {
+        return "-fx-background-color:" + BLUE + ";" +
+                "-fx-text-fill:white;" +
+                "-fx-background-radius:12;" +
+                "-fx-font-weight:bold;" +
+                "-fx-padding:12;" +
+                "-fx-cursor: hand;";
+    }
+
+    private String titleStyle() {
+        return "-fx-text-fill:white;-fx-font-size:26px;-fx-font-weight:bold;";
+    }
+
+    private String subStyle() {
+        return "-fx-text-fill:#A1A1AA;-fx-font-size:13px;";
+    }
+
+    // ================= BACK BUTTON =================
+
+    private String backStyle() {
+        return "-fx-background-color: transparent;" +
+                "-fx-text-fill: #60A5FA;" +
+                "-fx-font-size: 13px;" +
+                "-fx-font-weight: bold;" +
+                "-fx-cursor: hand;";
+    }
+
+    private String backHoverStyle() {
+        return "-fx-background-color: rgba(96,165,250,0.12);" +
+                "-fx-text-fill: #60A5FA;" +
+                "-fx-font-size: 13px;" +
+                "-fx-font-weight: bold;" +
+                "-fx-background-radius: 8;" +
+                "-fx-cursor: hand;";
+    }
+
+    // ================= EFFECTS =================
+
+    private void addButtonEffects(Button b) {
+        b.setOnMouseEntered(e -> {
+            b.setScaleX(1.03);
+            b.setScaleY(1.03);
+        });
+        b.setOnMouseExited(e -> {
+            b.setScaleX(1);
+            b.setScaleY(1);
+        });
+    }
+
+    private void entrance(VBox card) {
+        card.setOpacity(0);
+        card.setTranslateY(20);
+
+        TranslateTransition tt =
+                new TranslateTransition(Duration.millis(400), card);
+
+        tt.setToY(0);
+        card.setOpacity(1);
+        tt.play();
+    }
+
+    private void shake(VBox card) {
+        TranslateTransition t =
+                new TranslateTransition(Duration.millis(60), card);
+
+        t.setByX(8);
+        t.setCycleCount(6);
+        t.setAutoReverse(true);
+        t.play();
     }
 }

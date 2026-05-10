@@ -2,17 +2,17 @@ package view;
 
 import controller.LibraryItemController;
 import controller.UserController;
-import model.Book;
-import model.LibraryItem;
-import model.Magazine;
-
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import model.Book;
+import model.LibraryItem;
+import model.Magazine;
 
 import java.util.List;
 import java.util.Map;
@@ -20,118 +20,222 @@ import java.util.stream.Collectors;
 
 public class AdminDashboardUI {
 
+    // ================= COLORS =================
+
+    private static final String BG = "#0F0F10";
+    private static final String SIDEBAR_BG = "#171717";
+    private static final String CARD_BG = "#1E1E1F";
+    private static final String BORDER = "#2B2B2D";
+
+    private static final String TEXT_PRIMARY = "#F5F5F5";
+    private static final String TEXT_SECOND = "#A1A1AA";
+
+    private static final String GREEN = "#A3E635";
+    private static final String BLUE = "#60A5FA";
+    private static final String ORANGE = "#FB923C";
+    private static final String RED = "#F87171";
+
     public void show(Stage stage) {
 
-        // ── DATA ─────────────────────────────
-        List<LibraryItem> items = LibraryItemController.getAllItems();
+        // ================= DATA =================
+
+        List<LibraryItem> items =
+                LibraryItemController.getAllItems();
 
         int totalItems = items.size();
 
-        int totalBooks = (int) items.stream()
+        int books = (int) items.stream()
                 .filter(i -> i instanceof Book)
                 .count();
 
-        int totalMagazines = (int) items.stream()
+        int magazines = (int) items.stream()
                 .filter(i -> i instanceof Magazine)
                 .count();
 
-        int totalUsers = UserController.listUsers().size();
+        int users = UserController.listUsers().size();
 
-        // ── TOP BAR ──────────────────────────
-        Label brand = new Label("📚 Librarium Admin");
+        // ================= SIDEBAR =================
 
-        brand.setStyle(
-                "-fx-font-size: 18px;" +
-                        "-fx-font-weight: bold;" +
-                        "-fx-text-fill: #2C2C2A;"
+        VBox sidebar = new VBox(18);
+
+        sidebar.setPadding(new Insets(25));
+        sidebar.setPrefWidth(240);
+
+        sidebar.setStyle("""
+                -fx-background-color: #171717;
+                -fx-border-color: #2B2B2D;
+                -fx-border-width: 0 1 0 0;
+                """);
+
+        Label logo = new Label("📚 Librarium");
+
+        logo.setStyle("""
+                -fx-text-fill: white;
+                -fx-font-size: 22px;
+                -fx-font-weight: bold;
+                """);
+
+        VBox nav = new VBox(12);
+
+        Button dashboardBtn =
+                createSidebarButton("Dashboard", true);
+
+        Button booksBtn =
+                createSidebarButton("Books", false);
+
+        Button magazinesBtn =
+                createSidebarButton("Magazines", false);
+
+        Button membersBtn =
+                createSidebarButton("Members", false);
+
+        Button reportsBtn =
+                createSidebarButton("Reports", false);
+
+        Button settingsBtn =
+                createSidebarButton("Settings", false);
+
+        nav.getChildren().addAll(
+                dashboardBtn,
+                booksBtn,
+                magazinesBtn,
+                membersBtn,
+                reportsBtn,
+                settingsBtn
         );
+
+        Region sidebarSpacer = new Region();
+
+        VBox.setVgrow(sidebarSpacer, Priority.ALWAYS);
+
+        VBox profileCard = new VBox(5);
+
+        profileCard.setPadding(new Insets(15));
+        profileCard.setStyle(cardStyle());
+
+        Label adminLabel = new Label("Admin");
+
+        adminLabel.setStyle("""
+                -fx-text-fill: white;
+                -fx-font-size: 15px;
+                -fx-font-weight: bold;
+                """);
+
+        Label roleLabel = new Label("Librarian");
+
+        roleLabel.setStyle("""
+                -fx-text-fill: #A1A1AA;
+                -fx-font-size: 13px;
+                """);
+
+        profileCard.getChildren().addAll(
+                adminLabel,
+                roleLabel
+        );
+
+        sidebar.getChildren().addAll(
+                logo,
+                nav,
+                sidebarSpacer,
+                profileCard
+        );
+
+        // ================= TOP BAR =================
+
+        Label title = new Label("Dashboard");
+
+        title.setStyle("""
+                -fx-text-fill: white;
+                -fx-font-size: 30px;
+                -fx-font-weight: bold;
+                """);
+
+        TextField searchField = new TextField();
+
+        searchField.setPromptText("Search books, members...");
+
+        searchField.setPrefWidth(280);
+
+        searchField.setStyle("""
+                -fx-background-color: #1E1E1F;
+                -fx-text-fill: white;
+                -fx-prompt-text-fill: #71717A;
+                -fx-background-radius: 12;
+                -fx-border-color: #2B2B2D;
+                -fx-border-radius: 12;
+                -fx-padding: 10 14 10 14;
+                """);
+
+        Region topSpacer = new Region();
+
+        HBox.setHgrow(topSpacer, Priority.ALWAYS);
 
         Button logoutBtn = new Button("Logout");
 
-        logoutBtn.setStyle(
-                "-fx-background-color: transparent;" +
-                        "-fx-text-fill: #555;" +
-                        "-fx-font-size: 13px;"
+        logoutBtn.setStyle("""
+                -fx-background-color: #27272A;
+                -fx-text-fill: white;
+                -fx-background-radius: 10;
+                -fx-padding: 10 18 10 18;
+                -fx-cursor: hand;
+                -fx-font-weight: bold;
+                """);
+
+        HBox topBar = new HBox(
+                15,
+                title,
+                topSpacer,
+                searchField,
+                logoutBtn
         );
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        topBar.setAlignment(Pos.CENTER_LEFT);
 
-        HBox topBar = new HBox(10, brand, spacer, logoutBtn);
+        // ================= STATS =================
 
-        topBar.setAlignment(Pos.CENTER);
-        topBar.setPadding(new Insets(10, 20, 10, 20));
+        HBox statsRow = new HBox(18);
 
-        topBar.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-border-color: #E5E3DA;"
-        );
+        VBox totalCard =
+                createStatCard(
+                        "Total Items",
+                        String.valueOf(totalItems),
+                        GREEN
+                );
 
-        // ── TITLE ────────────────────────────
-        Label title = new Label("Dashboard");
+        VBox booksCard =
+                createStatCard(
+                        "Books",
+                        String.valueOf(books),
+                        BLUE
+                );
 
-        title.setStyle(
-                "-fx-font-size: 24px;" +
-                        "-fx-font-weight: bold;" +
-                        "-fx-text-fill: #2C2C2A;"
-        );
+        VBox magazinesCard =
+                createStatCard(
+                        "Magazines",
+                        String.valueOf(magazines),
+                        ORANGE
+                );
 
-        Label subtitle = new Label("Overview of library statistics");
+        VBox usersCard =
+                createStatCard(
+                        "Members",
+                        String.valueOf(users),
+                        RED
+                );
 
-        subtitle.setStyle(
-                "-fx-font-size: 13px;" +
-                        "-fx-text-fill: #888780;"
-        );
+        HBox.setHgrow(totalCard, Priority.ALWAYS);
+        HBox.setHgrow(booksCard, Priority.ALWAYS);
+        HBox.setHgrow(magazinesCard, Priority.ALWAYS);
+        HBox.setHgrow(usersCard, Priority.ALWAYS);
 
-        // ── STAT CARDS ───────────────────────
-        VBox itemsCard = createStatCard(
-                "Total Items",
-                String.valueOf(totalItems)
-        );
-
-        VBox booksCard = createStatCard(
-                "Books",
-                String.valueOf(totalBooks)
-        );
-
-        VBox magazinesCard = createStatCard(
-                "Magazines",
-                String.valueOf(totalMagazines)
-        );
-
-        VBox usersCard = createStatCard(
-                "Users",
-                String.valueOf(totalUsers)
-        );
-
-        HBox statsRow = new HBox(
-                20,
-                itemsCard,
+        statsRow.getChildren().addAll(
+                totalCard,
                 booksCard,
                 magazinesCard,
                 usersCard
         );
 
-        statsRow.setAlignment(Pos.CENTER);
-
-        // ── PIE CHART ────────────────────────
-        PieChart pieChart = new PieChart();
-
-        pieChart.getData().add(
-                new PieChart.Data("Books", totalBooks)
-        );
-
-        pieChart.getData().add(
-                new PieChart.Data("Magazines", totalMagazines)
-        );
-
-        pieChart.setTitle("Library Content");
-
-        pieChart.setLabelsVisible(true);
-        pieChart.setLegendVisible(true);
-        pieChart.setPrefHeight(260);
-
-        // ── TOP 5 CATEGORIES BAR CHART ──────
+        // ================= BAR CHART =================
 
         CategoryAxis xAxis = new CategoryAxis();
         NumberAxis yAxis = new NumberAxis();
@@ -139,21 +243,38 @@ public class AdminDashboardUI {
         xAxis.setLabel("Category");
         yAxis.setLabel("Books");
 
+        xAxis.setTickLabelFill(Color.web(TEXT_SECOND));
+        yAxis.setTickLabelFill(Color.web(TEXT_SECOND));
+
         BarChart<String, Number> barChart =
                 new BarChart<>(xAxis, yAxis);
 
         barChart.setTitle("Top 5 Book Categories");
 
-        // Count books by category
-        Map<String, Long> categoryStats = items.stream()
-                .filter(i -> i instanceof Book)
-                .map(i -> (Book) i)
-                .collect(Collectors.groupingBy(
-                        Book::getCategory,
-                        Collectors.counting()
-                ));
+        barChart.setLegendVisible(false);
+        barChart.setAnimated(false);
 
-        // Sort descending and keep top 5
+        barChart.setPrefHeight(320);
+
+        barChart.setStyle("""
+                -fx-background-color: transparent;
+                -fx-text-fill: white;
+                """);
+        xAxis.setStyle("""
+        -fx-tick-label-font-size: 16px;
+        """);
+
+        // ================= CATEGORY LOGIC =================
+
+        Map<String, Long> categoryStats =
+                items.stream()
+                        .filter(i -> i instanceof Book)
+                        .map(i -> (Book) i)
+                        .collect(Collectors.groupingBy(
+                                Book::getCategory,
+                                Collectors.counting()
+                        ));
+
         List<Map.Entry<String, Long>> topCategories =
                 categoryStats.entrySet()
                         .stream()
@@ -161,8 +282,7 @@ public class AdminDashboardUI {
                                 Long.compare(
                                         b.getValue(),
                                         a.getValue()
-                                )
-                        )
+                                ))
                         .limit(5)
                         .toList();
 
@@ -181,187 +301,360 @@ public class AdminDashboardUI {
 
         barChart.getData().add(series);
 
-        barChart.setLegendVisible(false);
-        barChart.setAnimated(false);
-        barChart.setPrefHeight(320);
+        // ================= PIE CHART =================
 
-        // ── ACTION BUTTONS ───────────────────
-        Button manageBooks =
-                createPrimaryButton("Manage Books");
+        PieChart pieChart = new PieChart();
 
-        Button manageMagazines =
-                createPrimaryButton("Manage Magazines");
-
-        Button manageUsers =
-                createPrimaryButton("Manage Users");
-
-        VBox actions = new VBox(
-                12,
-                manageBooks,
-                manageMagazines,
-                manageUsers
+        pieChart.getData().add(
+                new PieChart.Data("Books", books)
         );
 
-        // ── MAIN CARD ────────────────────────
-        VBox mainCard = new VBox(
-                25,
-                title,
-                subtitle,
+        pieChart.getData().add(
+                new PieChart.Data("Magazines", magazines)
+        );
+
+        pieChart.setLegendVisible(true);
+        pieChart.setLabelsVisible(true);
+
+        pieChart.setPrefHeight(300);
+
+        pieChart.setStyle("""
+                -fx-background-color: transparent;
+                -fx-text-fill: white;
+
+                CHART_COLOR_1: #60A5FA;
+                CHART_COLOR_2: #FB923C;
+                """);
+
+        // ================= CHART CARDS =================
+
+        VBox chartCard = new VBox(15);
+
+        Label chartTitle =
+                new Label("Top Categories");
+
+        chartTitle.setStyle("""
+                -fx-text-fill: white;
+                -fx-font-size: 18px;
+                -fx-font-weight: bold;
+                """);
+
+        chartCard.getChildren().addAll(
+                chartTitle,
+                barChart
+        );
+
+        chartCard.setPadding(new Insets(22));
+
+        chartCard.setStyle(cardStyle());
+
+        HBox.setHgrow(chartCard, Priority.ALWAYS);
+
+        VBox pieCard = new VBox(15);
+
+        Label pieTitle =
+                new Label("Collection Breakdown");
+
+        pieTitle.setStyle("""
+                -fx-text-fill: white;
+                -fx-font-size: 18px;
+                -fx-font-weight: bold;
+                """);
+
+        pieCard.getChildren().addAll(
+                pieTitle,
+                pieChart
+        );
+
+        pieCard.setPadding(new Insets(22));
+
+        pieCard.setPrefWidth(350);
+
+        pieCard.setStyle(cardStyle());
+
+        HBox chartsSection =
+                new HBox(18, chartCard, pieCard);
+
+        // ================= QUICK ACTIONS =================
+
+        VBox actionsCard = new VBox(14);
+
+        Label quickTitle =
+                new Label("Quick Actions");
+
+        quickTitle.setStyle("""
+                -fx-text-fill: white;
+                -fx-font-size: 18px;
+                -fx-font-weight: bold;
+                """);
+
+        Button manageBooksBtn =
+                createActionButton("Manage Books");
+
+        Button manageMagazinesBtn =
+                createActionButton("Manage Magazines");
+
+        Button manageUsersBtn =
+                createActionButton("Manage Users");
+
+        actionsCard.getChildren().addAll(
+                quickTitle,
+                manageBooksBtn,
+                manageMagazinesBtn,
+                manageUsersBtn
+        );
+
+        actionsCard.setPadding(new Insets(22));
+
+        actionsCard.setStyle(cardStyle());
+
+        // ================= MAIN CONTENT =================
+
+        VBox content = new VBox(22);
+
+        content.setPadding(new Insets(30));
+
+        content.getChildren().addAll(
+                topBar,
                 statsRow,
-                new Separator(),
-                pieChart,
-                barChart,
-                new Separator(),
-                actions
+                chartsSection,
+                actionsCard
         );
 
-        mainCard.setPadding(new Insets(30));
+        content.setStyle("""
+                -fx-background-color: #0F0F10;
+                """);
 
-        mainCard.setMaxWidth(950);
+        // ================= ROOT =================
 
-        mainCard.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 16;" +
-                        "-fx-border-color: #E5E3DA;" +
-                        "-fx-border-radius: 16;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 24, 0, 0, 4);"
-        );
+        BorderPane root = new BorderPane();
 
-        // Hover effect
-        mainCard.setOnMouseEntered(e ->
-                mainCard.setStyle(
-                        "-fx-background-color: white;" +
-                                "-fx-background-radius: 16;" +
-                                "-fx-border-color: #E5E3DA;" +
-                                "-fx-border-radius: 16;" +
-                                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 30, 0, 0, 6);"
-                )
-        );
+        root.setLeft(sidebar);
 
-        mainCard.setOnMouseExited(e ->
-                mainCard.setStyle(
-                        "-fx-background-color: white;" +
-                                "-fx-background-radius: 16;" +
-                                "-fx-border-color: #E5E3DA;" +
-                                "-fx-border-radius: 16;" +
-                                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 24, 0, 0, 4);"
-                )
-        );
+        root.setCenter(content);
 
-        // ── ROOT ─────────────────────────────
-        ScrollPane scrollPane = new ScrollPane(mainCard);
+        root.setStyle("""
+                -fx-background-color: #0F0F10;
+                """);
 
-        scrollPane.setFitToWidth(true);
+        // ================= SCENE =================
 
-        scrollPane.setStyle(
-                "-fx-background: #F1EFE8;"
-        );
-
-        StackPane root = new StackPane(scrollPane);
-
-        root.setPadding(new Insets(40));
-
-        root.setStyle(
-                "-fx-background-color: #F1EFE8;"
-        );
-
-        VBox layout = new VBox(topBar, root);
-
-        // ── BUTTON ACTIONS ───────────────────
-        manageBooks.setOnAction(
-                e -> new BookManagementUI().show(stage)
-        );
-
-        manageMagazines.setOnAction(
-                e -> new MagazineManagementUI().show(stage)
-        );
-
-        manageUsers.setOnAction(
-                e -> new UserManagementUI().show(stage)
-        );
-
-        logoutBtn.setOnAction(
-                e -> new LoginUI().start(stage)
-        );
-
-        // ── SCENE ────────────────────────────
-        Scene scene = new Scene(layout, 1100, 850);
+        Scene scene = new Scene(root, 1450, 900);
 
         stage.setScene(scene);
 
-        stage.setTitle("Librarium — Admin Dashboard");
+        stage.setTitle("Librarium Dashboard");
 
         stage.show();
 
-        // ── APPLY COLORS AFTER SHOW ──────────
-        applyChartColors(pieChart, barChart);
+        // ================= BAR COLORS =================
+
+        for (XYChart.Series<String, Number> s :
+                barChart.getData()) {
+
+            for (XYChart.Data<String, Number> d :
+                    s.getData()) {
+
+                d.nodeProperty().addListener(
+                        (obs, oldNode, node) -> {
+
+                            if (node != null) {
+
+                                node.setStyle("""
+                                        -fx-bar-fill: #F59E0B;
+                                        """);
+                            }
+                        });
+            }
+        }
+
+        // ================= PIE COLORS =================
+
+        pieChart.applyCss();
+
+        for (PieChart.Data data : pieChart.getData()) {
+
+            if (data.getName().equals("Books")) {
+
+                data.getNode().setStyle(
+                        "-fx-pie-color: #60A5FA;"
+                );
+            }
+
+            else if (data.getName().equals("Magazines")) {
+
+                data.getNode().setStyle(
+                        "-fx-pie-color: #FB923C;"
+                );
+            }
+        }
+
+        // ================= ACTIONS =================
+
+        manageBooksBtn.setOnAction(e ->
+                new BookManagementUI().show(stage));
+
+        manageMagazinesBtn.setOnAction(e ->
+                new MagazineManagementUI().show(stage));
+
+        manageUsersBtn.setOnAction(e ->
+                new UserManagementUI().show(stage));
+
+        logoutBtn.setOnAction(e ->
+                new LoginUI().start(stage));
     }
 
-    // ── STAT CARD ───────────────────────────
+    // =====================================================
+    // STAT CARD
+    // =====================================================
+
     private VBox createStatCard(
             String title,
-            String value
+            String value,
+            String color
     ) {
 
-        Label titleLabel = new Label(title);
+        Label dot = new Label("●");
 
-        titleLabel.setStyle(
-                "-fx-font-size: 13px;" +
-                        "-fx-text-fill: #888780;"
-        );
+        dot.setStyle("""
+                -fx-font-size: 18px;
+                -fx-text-fill: """ + color + ";");
 
         Label valueLabel = new Label(value);
 
-        valueLabel.setStyle(
-                "-fx-font-size: 24px;" +
-                        "-fx-font-weight: bold;" +
-                        "-fx-text-fill: #2C2C2A;"
+        valueLabel.setStyle("""
+                -fx-text-fill: white;
+                -fx-font-size: 34px;
+                -fx-font-weight: bold;
+                """);
+
+        Label titleLabel = new Label(title);
+
+        titleLabel.setStyle("""
+                -fx-text-fill: #A1A1AA;
+                -fx-font-size: 14px;
+                """);
+
+        VBox card = new VBox(
+                12,
+                dot,
+                valueLabel,
+                titleLabel
         );
 
-        VBox box = new VBox(
-                5,
-                titleLabel,
-                valueLabel
-        );
+        card.setPadding(new Insets(22));
 
-        box.setPadding(new Insets(15));
+        card.setStyle(cardStyle());
 
-        box.setPrefWidth(160);
+        card.setOnMouseEntered(e -> {
 
-        box.setAlignment(Pos.CENTER_LEFT);
+            card.setScaleX(1.02);
+            card.setScaleY(1.02);
+        });
 
-        box.setStyle(
-                "-fx-background-color: #F1EFE8;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-border-color: #E5E3DA;" +
-                        "-fx-border-radius: 12;"
-        );
+        card.setOnMouseExited(e -> {
 
-        return box;
+            card.setScaleX(1);
+            card.setScaleY(1);
+        });
+
+        return card;
     }
 
-    // ── BUTTON STYLE ────────────────────────
-    private Button createPrimaryButton(String text) {
+    // =====================================================
+    // SIDEBAR BUTTON
+    // =====================================================
+
+    private Button createSidebarButton(
+            String text,
+            boolean active
+    ) {
+
+        Button btn = new Button(text);
+
+        btn.setAlignment(Pos.CENTER_LEFT);
+
+        btn.setMaxWidth(Double.MAX_VALUE);
+
+        if (active) {
+
+            btn.setStyle("""
+                    -fx-background-color: #27272A;
+                    -fx-text-fill: white;
+                    -fx-background-radius: 10;
+                    -fx-padding: 12 16 12 16;
+                    -fx-font-size: 14px;
+                    -fx-cursor: hand;
+                    """);
+        }
+
+        else {
+
+            btn.setStyle("""
+                    -fx-background-color: transparent;
+                    -fx-text-fill: #A1A1AA;
+                    -fx-background-radius: 10;
+                    -fx-padding: 12 16 12 16;
+                    -fx-font-size: 14px;
+                    -fx-cursor: hand;
+                    """);
+
+            btn.setOnMouseEntered(e ->
+
+                    btn.setStyle("""
+                            -fx-background-color: #232326;
+                            -fx-text-fill: white;
+                            -fx-background-radius: 10;
+                            -fx-padding: 12 16 12 16;
+                            -fx-font-size: 14px;
+                            -fx-cursor: hand;
+                            """)
+            );
+
+            btn.setOnMouseExited(e ->
+
+                    btn.setStyle("""
+                            -fx-background-color: transparent;
+                            -fx-text-fill: #A1A1AA;
+                            -fx-background-radius: 10;
+                            -fx-padding: 12 16 12 16;
+                            -fx-font-size: 14px;
+                            -fx-cursor: hand;
+                            """)
+            );
+        }
+
+        return btn;
+    }
+
+    // =====================================================
+    // ACTION BUTTON
+    // =====================================================
+
+    private Button createActionButton(String text) {
 
         Button btn = new Button(text);
 
         btn.setMaxWidth(Double.MAX_VALUE);
 
-        btn.setStyle(
-                "-fx-background-color: #2C2C2A;" +
-                        "-fx-text-fill: white;" +
-                        "-fx-background-radius: 10;" +
-                        "-fx-padding: 12;" +
-                        "-fx-font-weight: bold;" +
-                        "-fx-font-size: 13px;"
-        );
+        btn.setStyle("""
+                -fx-background-color: #27272A;
+                -fx-text-fill: white;
+                -fx-background-radius: 12;
+                -fx-padding: 14;
+                -fx-font-size: 14px;
+                -fx-font-weight: bold;
+                -fx-cursor: hand;
+                """);
 
         btn.setOnMouseEntered(e -> {
-            btn.setScaleX(1.03);
-            btn.setScaleY(1.03);
+
+            btn.setScaleX(1.02);
+            btn.setScaleY(1.02);
         });
 
         btn.setOnMouseExited(e -> {
+
             btn.setScaleX(1);
             btn.setScaleY(1);
         });
@@ -369,40 +662,25 @@ public class AdminDashboardUI {
         return btn;
     }
 
-    // ── CHART COLORS ───────────────────────
-    private void applyChartColors(
-            PieChart pieChart,
-            BarChart<String, Number> barChart
-    ) {
+    // =====================================================
+    // CARD STYLE
+    // =====================================================
 
-        // Pie chart colors
-        for (PieChart.Data data : pieChart.getData()) {
+    private String cardStyle() {
 
-            if (data.getName().equals("Books")) {
-
-                data.getNode().setStyle(
-                        "-fx-pie-color: #2C2C2A;"
+        return """
+                -fx-background-color: #1E1E1F;
+                -fx-background-radius: 18;
+                -fx-border-color: #2B2B2D;
+                -fx-border-radius: 18;
+                -fx-effect: dropshadow(
+                    gaussian,
+                    rgba(0,0,0,0.35),
+                    20,
+                    0,
+                    0,
+                    6
                 );
-
-            } else {
-
-                data.getNode().setStyle(
-                        "-fx-pie-color: #888780;"
-                );
-            }
-        }
-
-        // Bar chart colors
-        for (XYChart.Series<String, Number> s
-                : barChart.getData()) {
-
-            for (XYChart.Data<String, Number> data
-                    : s.getData()) {
-
-                data.getNode().setStyle(
-                        "-fx-bar-fill: #2C2C2A;"
-                );
-            }
-        }
+                """;
     }
 }

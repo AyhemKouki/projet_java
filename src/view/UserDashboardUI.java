@@ -3,11 +3,6 @@ package view;
 import Execption.MaximumBooksLimitException;
 import controller.BorrowController;
 import controller.LibraryItemController;
-import model.Book;
-import model.LibraryItem;
-import model.Magazine;
-import util.Session;
-
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -16,71 +11,193 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import model.Book;
+import model.LibraryItem;
+import model.Magazine;
+import util.Session;
 
 import java.util.List;
 
 public class UserDashboardUI {
 
+    // ================= COLORS =================
+
+    private static final String BG = "#0F0F10";
+    private static final String SIDEBAR = "#171717";
+    private static final String CARD = "#1E1E1F";
+    private static final String BORDER = "#2B2B2D";
+
+    private static final String TEXT = "#F5F5F5";
+    private static final String MUTED = "#A1A1AA";
+
+    private static final String BLUE = "#60A5FA";
+
     private TilePane itemsGrid = new TilePane();
 
     public void show(Stage stage) {
 
-        // ── TOP BAR ─────────────────────────────
-        Label brand = new Label("📚 Librarium");
+        // ================= SIDEBAR =================
 
-        brand.setStyle(
-                "-fx-font-size: 18px;" +
-                        "-fx-font-weight: bold;" +
-                        "-fx-text-fill: #2C2C2A;"
-        );
+        VBox sidebar = new VBox(18);
 
-        Button refreshBtn = createTopButton("Refresh");
-        Button myItemsBtn = createTopButton("My Items");
-        Button profileBtn = createTopButton("Profile");
-        Button logoutBtn = createTopButton("Logout");
+        sidebar.setPadding(new Insets(25));
+        sidebar.setPrefWidth(240);
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        sidebar.setStyle("""
+                -fx-background-color: #171717;
+                -fx-border-color: #2B2B2D;
+                -fx-border-width: 0 1 0 0;
+                """);
 
-        HBox topBar = new HBox(
-                15,
-                brand,
-                spacer,
-                refreshBtn,
+        Label logo = new Label("📚 Librarium");
+
+        logo.setStyle("""
+                -fx-text-fill: white;
+                -fx-font-size: 24px;
+                -fx-font-weight: bold;
+                """);
+
+        VBox nav = new VBox(12);
+
+        Button dashboardBtn =
+                createSidebarButton("Dashboard", true);
+
+        Button myItemsBtn =
+                createSidebarButton("My Borrowed Items", false);
+
+        Button profileBtn =
+                createSidebarButton("Profile", false);
+
+        Button refreshBtn =
+                createSidebarButton("Refresh", false);
+
+        Button logoutBtn =
+                createSidebarButton("Logout", false);
+
+        nav.getChildren().addAll(
+                dashboardBtn,
                 myItemsBtn,
                 profileBtn,
+                refreshBtn,
                 logoutBtn
         );
 
-        topBar.setAlignment(Pos.CENTER);
-        topBar.setPadding(new Insets(10, 20, 10, 20));
+        Region spacer = new Region();
 
-        topBar.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-border-color: #E5E3DA;"
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        VBox profileCard = new VBox(5);
+
+        profileCard.setPadding(new Insets(15));
+
+        profileCard.setStyle(cardStyle());
+
+        Label userLabel = new Label("Library User");
+
+        userLabel.setStyle("""
+                -fx-text-fill: white;
+                -fx-font-size: 15px;
+                -fx-font-weight: bold;
+                """);
+
+        Label statusLabel = new Label("Active Member");
+
+        statusLabel.setStyle("""
+                -fx-text-fill: #A1A1AA;
+                -fx-font-size: 13px;
+                """);
+
+        profileCard.getChildren().addAll(
+                userLabel,
+                statusLabel
         );
 
-        // ── GRID ────────────────────────────────
-        itemsGrid.setPadding(new Insets(20));
-        itemsGrid.setHgap(15);
-        itemsGrid.setVgap(15);
+        sidebar.getChildren().addAll(
+                logo,
+                nav,
+                spacer,
+                profileCard
+        );
+
+        // ================= TOP BAR =================
+
+        Label pageTitle = new Label(
+                "Available Library Items"
+        );
+
+        pageTitle.setStyle("""
+                -fx-text-fill: white;
+                -fx-font-size: 30px;
+                -fx-font-weight: bold;
+                """);
+
+        TextField searchField = new TextField();
+
+        searchField.setPromptText(
+                "Search books..."
+        );
+
+        searchField.setPrefWidth(280);
+
+        searchField.setStyle("""
+                -fx-background-color: #1E1E1F;
+                -fx-text-fill: white;
+                -fx-prompt-text-fill: #71717A;
+                -fx-background-radius: 12;
+                -fx-border-color: #2B2B2D;
+                -fx-border-radius: 12;
+                -fx-padding: 10 14 10 14;
+                """);
+
+        Region topSpacer = new Region();
+
+        HBox.setHgrow(topSpacer, Priority.ALWAYS);
+
+        HBox topBar = new HBox(
+                15,
+                pageTitle,
+                topSpacer,
+                searchField
+        );
+
+        topBar.setAlignment(Pos.CENTER_LEFT);
+
+        // ================= GRID =================
+
+        itemsGrid.setHgap(20);
+        itemsGrid.setVgap(20);
+
         itemsGrid.setPrefColumns(4);
 
         loadItemsGrid();
 
-        Label title = createSectionTitle("Available Library Items");
+        ScrollPane scrollPane =
+                new ScrollPane(itemsGrid);
 
-        ScrollPane scroll = new ScrollPane(itemsGrid);
-        scroll.setFitToWidth(true);
+        scrollPane.setFitToWidth(true);
 
-        VBox content = new VBox(12, title, scroll);
+        scrollPane.setStyle("""
+                -fx-background: transparent;
+                -fx-background-color: transparent;
+                """);
 
-        content.setPadding(new Insets(20));
+        VBox content = new VBox(
+                22,
+                topBar,
+                scrollPane
+        );
 
-        styleCard(content);
+        content.setPadding(new Insets(30));
 
-        // ── ACTIONS ─────────────────────────────
-        refreshBtn.setOnAction(e -> loadItemsGrid());
+        content.setStyle("""
+                -fx-background-color: #0F0F10;
+                """);
+
+        // ================= ACTIONS =================
+
+        refreshBtn.setOnAction(e ->
+                loadItemsGrid()
+        );
 
         myItemsBtn.setOnAction(e ->
                 showBorrowedItems(stage)
@@ -94,21 +211,32 @@ public class UserDashboardUI {
                 new LoginUI().start(stage)
         );
 
-        // ── ROOT ────────────────────────────────
-        VBox root = new VBox(topBar, content);
+        // ================= ROOT =================
 
-        root.setStyle(
-                "-fx-background-color: #F1EFE8;"
-        );
+        BorderPane root = new BorderPane();
 
-        Scene scene = new Scene(root, 1000, 550);
+        root.setLeft(sidebar);
+
+        root.setCenter(content);
+
+        root.setStyle("""
+                -fx-background-color: #0F0F10;
+                """);
+
+        Scene scene =
+                new Scene(root, 1450, 900);
 
         stage.setScene(scene);
-        stage.setTitle("Librarium — Dashboard");
+
+        stage.setTitle("Librarium Dashboard");
+
         stage.show();
     }
 
-    // ── LOAD AVAILABLE ITEMS ──────────────────
+    // =====================================================
+    // LOAD ITEMS
+    // =====================================================
+
     private void loadItemsGrid() {
 
         itemsGrid.getChildren().clear();
@@ -124,7 +252,10 @@ public class UserDashboardUI {
         }
     }
 
-    // ── ITEM CARD ─────────────────────────────
+    // =====================================================
+    // ITEM CARD
+    // =====================================================
+
     private VBox createItemCard(LibraryItem item) {
 
         ImageView image = new ImageView();
@@ -133,17 +264,21 @@ public class UserDashboardUI {
                 loadImage(item.getImagePath())
         );
 
-        image.setFitWidth(120);
-        image.setFitHeight(160);
+        image.setFitWidth(160);
+        image.setFitHeight(220);
+
         image.setPreserveRatio(true);
 
-        Label title = new Label(
-                item.getTitle()
-        );
+        Label title =
+                new Label(item.getTitle());
 
-        title.setStyle(
-                "-fx-font-weight: bold;"
-        );
+        title.setWrapText(true);
+
+        title.setStyle("""
+                -fx-text-fill: white;
+                -fx-font-size: 16px;
+                -fx-font-weight: bold;
+                """);
 
         Label info = new Label();
 
@@ -156,13 +291,17 @@ public class UserDashboardUI {
         } else if (item instanceof Magazine magazine) {
 
             info.setText(
-                    "Issue #" + magazine.getIssueNumber()
+                    "Issue #" +
+                            magazine.getIssueNumber()
             );
         }
 
-        info.setStyle(
-                "-fx-text-fill: #666;"
-        );
+        info.setWrapText(true);
+
+        info.setStyle("""
+                -fx-text-fill: #A1A1AA;
+                -fx-font-size: 13px;
+                """);
 
         Button borrowBtn =
                 createPrimaryButton("Borrow");
@@ -171,18 +310,26 @@ public class UserDashboardUI {
 
             try {
 
-                boolean success = BorrowController.borrowItem(
-                        Session.userId,
-                        item.getId()
-                );
+                boolean success =
+                        BorrowController.borrowItem(
+                                Session.userId,
+                                item.getId()
+                        );
 
                 if (success) {
 
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    Alert alert =
+                            new Alert(
+                                    Alert.AlertType.INFORMATION
+                            );
 
                     alert.setTitle("Success");
+
                     alert.setHeaderText(null);
-                    alert.setContentText("Item borrowed successfully!");
+
+                    alert.setContentText(
+                            "Item borrowed successfully!"
+                    );
 
                     alert.showAndWait();
 
@@ -191,10 +338,16 @@ public class UserDashboardUI {
 
             } catch (MaximumBooksLimitException ex) {
 
-                Alert alert = new Alert(Alert.AlertType.WARNING);
+                Alert alert =
+                        new Alert(
+                                Alert.AlertType.WARNING
+                        );
 
                 alert.setTitle("Borrow Limit");
-                alert.setHeaderText("Maximum Limit Reached");
+
+                alert.setHeaderText(
+                        "Maximum Limit Reached"
+                );
 
                 alert.setContentText(
                         ex.getMessage()
@@ -205,35 +358,49 @@ public class UserDashboardUI {
         });
 
         VBox card = new VBox(
-                8,
+                14,
                 image,
                 title,
                 info,
                 borrowBtn
         );
 
-        card.setAlignment(Pos.CENTER);
-        card.setPadding(new Insets(10));
+        card.setAlignment(Pos.TOP_CENTER);
 
-        card.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-border-color: #E5E3DA;" +
-                        "-fx-border-radius: 12;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10,0,0,2);"
-        );
+        card.setPadding(new Insets(18));
+
+        card.setPrefWidth(250);
+
+        card.setStyle(cardStyle());
+
+        card.setOnMouseEntered(e -> {
+
+            card.setScaleX(1.02);
+            card.setScaleY(1.02);
+        });
+
+        card.setOnMouseExited(e -> {
+
+            card.setScaleX(1);
+            card.setScaleY(1);
+        });
 
         return card;
     }
 
-    // ── BORROWED ITEMS ────────────────────────
+    // =====================================================
+    // BORROWED ITEMS PAGE
+    // =====================================================
+
     private void showBorrowedItems(Stage stage) {
 
         TilePane grid = new TilePane();
 
         grid.setPadding(new Insets(20));
-        grid.setHgap(15);
-        grid.setVgap(15);
+
+        grid.setHgap(20);
+        grid.setVgap(20);
+
         grid.setPrefColumns(4);
 
         List<LibraryItem> items =
@@ -249,17 +416,21 @@ public class UserDashboardUI {
                     loadImage(item.getImagePath())
             );
 
-            image.setFitWidth(120);
-            image.setFitHeight(160);
+            image.setFitWidth(160);
+            image.setFitHeight(220);
+
             image.setPreserveRatio(true);
 
-            Label title = new Label(
-                    item.getTitle()
-            );
+            Label title =
+                    new Label(item.getTitle());
 
-            title.setStyle(
-                    "-fx-font-weight: bold;"
-            );
+            title.setWrapText(true);
+
+            title.setStyle("""
+                    -fx-text-fill: white;
+                    -fx-font-size: 16px;
+                    -fx-font-weight: bold;
+                    """);
 
             Label info = new Label();
 
@@ -272,13 +443,15 @@ public class UserDashboardUI {
             } else if (item instanceof Magazine magazine) {
 
                 info.setText(
-                        "Issue #" + magazine.getIssueNumber()
+                        "Issue #" +
+                                magazine.getIssueNumber()
                 );
             }
 
-            info.setStyle(
-                    "-fx-text-fill: #666;"
-            );
+            info.setStyle("""
+                    -fx-text-fill: #A1A1AA;
+                    -fx-font-size: 13px;
+                    """);
 
             Button returnBtn =
                     createPrimaryButton("Return");
@@ -301,48 +474,64 @@ public class UserDashboardUI {
             });
 
             VBox card = new VBox(
-                    8,
+                    14,
                     image,
                     title,
                     info,
                     returnBtn
             );
 
-            card.setAlignment(Pos.CENTER);
-            card.setPadding(new Insets(10));
+            card.setAlignment(Pos.TOP_CENTER);
 
-            card.setStyle(
-                    "-fx-background-color: white;" +
-                            "-fx-background-radius: 12;" +
-                            "-fx-border-color: #E5E3DA;" +
-                            "-fx-border-radius: 12;" +
-                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10,0,0,2);"
-            );
+            card.setPadding(new Insets(18));
+
+            card.setPrefWidth(250);
+
+            card.setStyle(cardStyle());
 
             grid.getChildren().add(card);
         }
 
         Button backBtn =
-                createTopButton("← Back");
+                createPrimaryButton("← Back");
 
         backBtn.setOnAction(e ->
                 show(stage)
         );
 
-        VBox root = new VBox(
-                10,
+        Label title = new Label(
+                "My Borrowed Items"
+        );
+
+        title.setStyle("""
+                -fx-text-fill: white;
+                -fx-font-size: 28px;
+                -fx-font-weight: bold;
+                """);
+
+        VBox content = new VBox(
+                20,
                 backBtn,
+                title,
                 new ScrollPane(grid)
         );
 
-        root.setPadding(new Insets(20));
+        content.setPadding(new Insets(30));
 
-        Scene scene = new Scene(root, 900, 500);
+        content.setStyle("""
+                -fx-background-color: #0F0F10;
+                """);
+
+        Scene scene =
+                new Scene(content, 1400, 900);
 
         stage.setScene(scene);
     }
 
-    // ── IMAGE LOADER ──────────────────────────
+    // =====================================================
+    // IMAGE LOADER
+    // =====================================================
+
     private Image loadImage(String path) {
 
         try {
@@ -350,35 +539,32 @@ public class UserDashboardUI {
             if (path == null || path.isEmpty()) {
 
                 return new Image(
-                        "https://via.placeholder.com/120x160"
+                        "https://via.placeholder.com/160x220"
                 );
             }
 
-            // URL image
             if (path.startsWith("http")) {
 
                 return new Image(
                         path,
-                        120,
                         160,
+                        220,
                         true,
                         true
                 );
             }
 
-            // File URI image
             if (path.startsWith("file:")) {
 
                 return new Image(
                         path,
-                        120,
                         160,
+                        220,
                         true,
                         true
                 );
             }
 
-            // Resource image
             return new Image(
                     getClass().getResourceAsStream(path)
             );
@@ -386,23 +572,14 @@ public class UserDashboardUI {
         } catch (Exception e) {
 
             return new Image(
-                    "https://via.placeholder.com/120x160"
+                    "https://via.placeholder.com/160x220"
             );
         }
     }
 
-    // ── HELPERS ───────────────────────────────
-    private Label createSectionTitle(String text) {
-
-        Label label = new Label(text);
-
-        label.setStyle(
-                "-fx-font-size: 16px;" +
-                        "-fx-font-weight: bold;"
-        );
-
-        return label;
-    }
+    // =====================================================
+    // PRIMARY BUTTON
+    // =====================================================
 
     private Button createPrimaryButton(String text) {
 
@@ -410,34 +587,116 @@ public class UserDashboardUI {
 
         btn.setMaxWidth(Double.MAX_VALUE);
 
-        btn.setStyle(
-                "-fx-background-color:#2C2C2A;" +
-                        "-fx-text-fill:white;" +
-                        "-fx-padding:10;"
-        );
+        btn.setStyle("""
+                -fx-background-color: #60A5FA;
+                -fx-text-fill: white;
+                -fx-background-radius: 12;
+                -fx-padding: 12;
+                -fx-font-size: 14px;
+                -fx-font-weight: bold;
+                -fx-cursor: hand;
+                """);
+
+        btn.setOnMouseEntered(e -> {
+
+            btn.setScaleX(1.03);
+            btn.setScaleY(1.03);
+        });
+
+        btn.setOnMouseExited(e -> {
+
+            btn.setScaleX(1);
+            btn.setScaleY(1);
+        });
 
         return btn;
     }
 
-    private Button createTopButton(String text) {
+    // =====================================================
+    // SIDEBAR BUTTON
+    // =====================================================
+
+    private Button createSidebarButton(
+            String text,
+            boolean active
+    ) {
 
         Button btn = new Button(text);
 
-        btn.setStyle(
-                "-fx-background-color: transparent;" +
-                        "-fx-text-fill: #555;"
-        );
+        btn.setAlignment(Pos.CENTER_LEFT);
+
+        btn.setMaxWidth(Double.MAX_VALUE);
+
+        if (active) {
+
+            btn.setStyle("""
+                    -fx-background-color: #27272A;
+                    -fx-text-fill: white;
+                    -fx-background-radius: 10;
+                    -fx-padding: 12 16 12 16;
+                    -fx-font-size: 14px;
+                    -fx-cursor: hand;
+                    """);
+        }
+
+        else {
+
+            btn.setStyle("""
+                    -fx-background-color: transparent;
+                    -fx-text-fill: #A1A1AA;
+                    -fx-background-radius: 10;
+                    -fx-padding: 12 16 12 16;
+                    -fx-font-size: 14px;
+                    -fx-cursor: hand;
+                    """);
+
+            btn.setOnMouseEntered(e ->
+
+                    btn.setStyle("""
+                            -fx-background-color: #232326;
+                            -fx-text-fill: white;
+                            -fx-background-radius: 10;
+                            -fx-padding: 12 16 12 16;
+                            -fx-font-size: 14px;
+                            -fx-cursor: hand;
+                            """)
+            );
+
+            btn.setOnMouseExited(e ->
+
+                    btn.setStyle("""
+                            -fx-background-color: transparent;
+                            -fx-text-fill: #A1A1AA;
+                            -fx-background-radius: 10;
+                            -fx-padding: 12 16 12 16;
+                            -fx-font-size: 14px;
+                            -fx-cursor: hand;
+                            """)
+            );
+        }
 
         return btn;
     }
 
-    private void styleCard(VBox box) {
+    // =====================================================
+    // CARD STYLE
+    // =====================================================
 
-        box.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-border-color: #E5E3DA;" +
-                        "-fx-border-radius: 12;"
-        );
+    private String cardStyle() {
+
+        return """
+                -fx-background-color: #1E1E1F;
+                -fx-background-radius: 18;
+                -fx-border-color: #2B2B2D;
+                -fx-border-radius: 18;
+                -fx-effect: dropshadow(
+                    gaussian,
+                    rgba(0,0,0,0.35),
+                    20,
+                    0,
+                    0,
+                    6
+                );
+                """;
     }
 }
