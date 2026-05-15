@@ -3,6 +3,7 @@ package controller;
 import Execption.MaximumBooksLimitException;
 import database.DBConnection;
 import model.*;
+import service.EmailService;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -162,5 +163,51 @@ public class BorrowController {
         }
 
         return items;
+    }
+
+    public static void checkLateReturns() {
+
+        String sql = """
+        SELECT u.email, u.name, li.title
+        FROM borrowed_items bi
+        JOIN users u ON bi.user_id = u.id
+        JOIN library_items li ON bi.item_id = li.id
+        WHERE bi.return_date IS NULL
+        AND DATE(bi.borrow_date) <= DATE('now', '-3 day')
+    """;
+
+        try (
+                Connection conn = DBConnection.connect();
+                PreparedStatement st = conn.prepareStatement(sql)
+        ) {
+
+            ResultSet rs = st.executeQuery();
+
+            while (rs.next()) {
+
+                String email = rs.getString("email");
+                String name = rs.getString("name");
+                String title = rs.getString("title");
+
+                String subject = "Library Return Reminder";
+
+                String body = """
+                    Hello %s,
+
+                    You borrowed:
+
+                    %s
+
+                    Please return it as soon as possible.
+
+                    Thank you.
+                    """.formatted(name, title);
+
+                EmailService.sendEmail(email, subject, body);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

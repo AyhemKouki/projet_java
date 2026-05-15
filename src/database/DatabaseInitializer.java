@@ -1,6 +1,7 @@
 package database;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
@@ -34,14 +35,25 @@ public class DatabaseInitializer {
                 ALTER TABLE library_items
                 ALTER COLUMN author DROP NOT NULL;
                 """;
+        String sql = """
+                UPDATE borrowed_items
+                SET borrow_date = DATE('now', '-4 days')
+                WHERE return_date IS NULL
+""";
 
         try (Connection conn = DBConnection.connect();
-             Statement stmt = conn.createStatement()) {
+             Statement stmt = conn.createStatement();
+             PreparedStatement st = conn.prepareStatement(sql)) {
 
             //stmt.execute(createUsersTable);
             //stmt.execute(createBorrowTable);
-
-            stmt.executeUpdate(q);
+            int rows = st.executeUpdate();
+            //stmt.executeUpdate(q);
+            if  (rows > 0) {
+                System.out.println(rows + " updated rows.");
+            }else{
+                System.out.println("failed");
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
